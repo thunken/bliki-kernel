@@ -12,7 +12,7 @@ Differences with `bliki`:
 * `bliki-addons` and `bliki-creator` were removed, so this repository is a fork of `bliki-core` only
 * All references to a specific SLF4J binding were removed (cf. https://bitbucket.org/axelclk/info.bliki.wiki/issues/47)
 * All references to Scribunto and Lua were removed
-* The POM file was trimmed down, and dependency were updated to newer versions
+* The POM file was trimmed down, and dependencies were updated to newer versions
 * The JAR is obviously smaller, if you care about that
 
 ## Latest release
