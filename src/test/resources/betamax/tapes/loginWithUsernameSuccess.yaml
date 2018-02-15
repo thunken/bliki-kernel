@@ -1,0 +1,38 @@
+!tape
+name: loginWithUsernameSuccess
+interactions:
+- recorded: 2015-06-28T17:21:33.001Z
+  request:
+    method: POST
+    uri: https://en.wiktionary.org/w/api.php
+    headers:
+      Connection: Keep-Alive
+      Content-Length: '100'
+      Content-Type: application/x-www-form-urlencoded
+      Cookie: GeoIP=PT:17:Maia:41.2357:-8.6199:v4; WMF-Last-Access=28-Jun-2015; enwiktionarySession=d0472c61ff77e9127fba7d3e46d7467d
+      Cookie2: $Version=1
+      Host: en.wiktionary.org
+      User-Agent: JavaWikipediaAPI/3.1-SNAPSHOT https://bitbucket.org/axelclk/info.bliki.wiki/
+    body: action=login&format=xml&lgname=jberkel&lgpassword=testing&lgtoken=ffffffffffffffffffffffffffffffff
+  response:
+    status: 200
+    headers:
+      Accept-Ranges: bytes
+      Age: '0'
+      Cache-control: private, must-revalidate, max-age=0
+      Connection: keep-alive
+      Content-Length: '214'
+      Content-Type: text/xml; charset=utf-8
+      Date: Sun, 28 Jun 2015 17:21:32 GMT
+      P3P: CP="This is not a P3P policy! See https://en.wiktionary.org/wiki/Special:CentralAutoLogin/P3P for more info."
+      Server: nginx/1.9.2
+      Set-Cookie: centralauth_User=Jberkel; expires=Tue, 28-Jul-2015 17:21:32 GMT; Max-Age=2592000; path=/; domain=.wiktionary.org; secure; httponly, centralauth_Token=82039b8f699d424755f270a352c414c4; expires=Tue, 28-Jul-2015 17:21:32 GMT; Max-Age=2592000; path=/; domain=.wiktionary.org; secure; httponly, centralauth_Session=ac4ad2be8382b7fe3092ac0b146816dd; path=/; domain=.wiktionary.org; secure; httponly, forceHTTPS=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; httponly, forceHTTPS=1; expires=Tue, 28-Jul-2015 17:21:32 GMT; Max-Age=2592000; path=/; domain=.wiktionary.org; httponly, enwiktionaryUserID=1580588; expires=Tue, 28-Jul-2015 17:21:32 GMT; Max-Age=2592000; path=/; secure; httponly, enwiktionaryUserName=Jberkel; expires=Tue, 28-Jul-2015 17:21:32 GMT; Max-Age=2592000; path=/; secure; httponly, forceHTTPS=true; expires=Tue, 28-Jul-2015 17:21:32 GMT; Max-Age=2592000; path=/; httponly, WMF-Last-Access=28-Jun-2015;Path=/;HttpOnly;Expires=Thu, 30 Jul 2015 12:00:00 GMT
+      Strict-Transport-Security: max-age=15768000
+      Vary: Accept-Encoding
+      X-Analytics: https=1
+      X-Cache: cp1054 miss (0), cp3004 miss (0), cp3041 frontend miss (0)
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: DENY
+      X-Powered-By: HHVM/3.6.1
+      X-Varnish: 2548899539, 3877560139, 1024316220
+    body: <?xml version="1.0"?><api><login result="Success" lguserid="1580588" lgusername="Jberkel" lgtoken="4d2510b7715a5cf743ca66e9b3f365a4" cookieprefix="enwiktionary" sessionid="d0472c61ff77e9127fba7d3e46d7467d" /></api>

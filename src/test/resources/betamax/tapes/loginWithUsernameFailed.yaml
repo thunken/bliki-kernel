@@ -1,0 +1,37 @@
+!tape
+name: loginWithUsernameFailed
+interactions:
+- recorded: 2015-06-28T17:21:25.690Z
+  request:
+    method: POST
+    uri: https://meta.wikimedia.org/w/api.php
+    headers:
+      Connection: Keep-Alive
+      Content-Length: '104'
+      Content-Type: application/x-www-form-urlencoded
+      Cookie: GeoIP=PT:17:Maia:41.2357:-8.6199:v4; WMF-Last-Access=28-Jun-2015; metawikiSession=484fd8b55a53cc25b7feb0aada96b30b
+      Cookie2: $Version=1
+      Host: meta.wikimedia.org
+      User-Agent: JavaWikipediaAPI/3.1-SNAPSHOT https://bitbucket.org/axelclk/info.bliki.wiki/
+    body: action=login&format=xml&lgname=someUser&lgpassword=somePassword&lgtoken=72403c43f13bdffe6a65cae741cb366c
+  response:
+    status: 200
+    headers:
+      Accept-Ranges: bytes
+      Age: '0'
+      Cache-control: private, must-revalidate, max-age=0
+      Connection: keep-alive
+      Content-Length: '66'
+      Content-Type: text/xml; charset=utf-8
+      Date: Sun, 28 Jun 2015 17:21:25 GMT
+      Server: nginx/1.9.2
+      Set-Cookie: WMF-Last-Access=28-Jun-2015;Path=/;HttpOnly;Expires=Thu, 30 Jul 2015 12:00:00 GMT
+      Strict-Transport-Security: max-age=15768000
+      Vary: Accept-Encoding
+      X-Analytics: https=1
+      X-Cache: cp1065 miss (0), cp3041 miss (0), cp3041 frontend miss (0)
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: DENY
+      X-Powered-By: HHVM/3.6.1
+      X-Varnish: 1866609035, 2114683380, 1024283385
+    body: <?xml version="1.0"?><api><login result="WrongPluginPass" /></api>
