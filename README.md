@@ -19,7 +19,7 @@ Differences with `bliki`:
 
 [![Release](https://jitpack.io/v/thunken/bliki-kernel.svg?style=flat-square)](https://github.com/thunken/bliki-kernel/releases)
 
-To add a dependency on this project using Gradle, Maven, sbt, or Leiningen, we recommend using [JitPack](https://jitpack.io/#thunken/bliki-kernel/1.0.0). The Maven group ID is `com.github.thunken`, and the artifact ID is `bliki-kernel`.
+To add a dependency on this project using Gradle, Maven, sbt, or Leiningen, we recommend using [JitPack](https://jitpack.io/#thunken/bliki-kernel/1.0.1). The Maven group ID is `com.github.thunken`, and the artifact ID is `bliki-kernel`.
 
 For example, for Maven, first add the JitPack repository to your build file:
 ```xml
@@ -36,6 +36,6 @@ And then add the dependency:
 	<dependency>
 	    <groupId>com.github.thunken</groupId>
 	    <artifactId>bliki-kernel</artifactId>
-	    <version>1.0.0</version>
+	    <version>1.0.1</version>
 	</dependency>
 ```
