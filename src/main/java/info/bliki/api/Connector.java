@@ -1,7 +1,14 @@
 package info.bliki.api;
 
-import info.bliki.api.query.Query;
-import info.bliki.api.query.RequestBuilder;
+import java.io.IOException;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -18,18 +25,12 @@ import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.net.ProxySelector;
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import info.bliki.api.query.Query;
+import info.bliki.api.query.RequestBuilder;
+import info.bliki.util.Throwables;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Manages the queries for the <a href="https://meta.wikimedia.org/w/api.php">Wikimedia API</a>. See the
@@ -38,6 +39,7 @@ import java.util.List;
  * The queries set their own user-agent string. See
  * <a href="https://meta.wikimedia.org/wiki/User-Agent_policy">User-Agent policy</a>
  */
+@Slf4j
 public class Connector {
 	protected final static String USER_AGENT = "JavaWikipediaAPI/3.1-SNAPSHOT https://bitbucket.org/axelclk/info.bliki.wiki/";
 
@@ -74,8 +76,7 @@ public class Connector {
 	private static final String RVPROP = "rvprop";
 	private static final String INFO = "info";
 
-	private HttpClient client;
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	private final HttpClient client;
 
 	protected static HttpClientBuilder DEFAULT_HTTPCLIENT_BUILDER = HttpClientBuilder.create().disableRedirectHandling()
 			.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
@@ -84,7 +85,7 @@ public class Connector {
 		this(DEFAULT_HTTPCLIENT_BUILDER);
 	}
 
-	public Connector(HttpClientBuilder builder) {
+	public Connector(final HttpClientBuilder builder) {
 		client = builder.build();
 	}
 
@@ -97,20 +98,20 @@ public class Connector {
 	 *            API url.
 	 * @return the completed user information or <code>null</code>, if the login fails
 	 */
-	public User login(User user) {
+	public User login(final User user) {
 		// The first pass gets the secret token and the second logs the user in
 		for (int i = 0; i < 2; i++) {
-			String userName = user.getUsername();
+			final String userName = user.getUsername();
 
 			if (userName == null || userName.trim().length() == 0) {
 				// no nothing for dummy users
 				return user;
 			}
 
-			HttpPost request = new HttpPost(user.getActionUrl());
+			final HttpPost request = new HttpPost(user.getActionUrl());
 			request.setHeader(HttpHeaders.USER_AGENT, USER_AGENT);
-			String lgDomain = user.getDomain();
-			List<NameValuePair> params = new ArrayList<>();
+			final String lgDomain = user.getDomain();
+			final List<NameValuePair> params = new ArrayList<>();
 			params.addAll(Arrays.asList(new BasicNameValuePair(PARAM_ACTION, ACTION_LOGIN),
 					new BasicNameValuePair(PARAM_FORMAT, FORMAT_XML),
 					new BasicNameValuePair(PARAM_LOGIN_NAME, userName),
@@ -124,14 +125,14 @@ public class Connector {
 			}
 			request.setEntity(new UrlEncodedFormEntity(params, (Charset) null));
 			try {
-				HttpResponse response = client.execute(request);
+				final HttpResponse response = client.execute(request);
 				if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 					final String responseBody = getAsXmlString(response);
 
-					XMLUserParser parser = new XMLUserParser(user, responseBody);
+					final XMLUserParser parser = new XMLUserParser(user, responseBody);
 					parser.parse();
 					if (i == 0 && User.NEED_TOKEN_ID.equals(user.getResult())) {
-						logger.debug("need_token_id");
+						log.debug("need_token_id");
 					} else if (User.SUCCESS_ID.equals(user.getResult())) {
 						return user;
 					} else {
@@ -139,12 +140,12 @@ public class Connector {
 					}
 				}
 			} catch (IOException | SAXException e) {
-				logger.error(null, e);
+				Throwables.log(log, e);
 			} finally {
 				request.releaseConnection();
 			}
 		}
-		logger.warn("could not log user in");
+		log.warn("could not log user in");
 		return null;
 	}
 
@@ -157,7 +158,7 @@ public class Connector {
 	 *            a list of title Strings "ArticleA,ArticleB,..."
 	 * @return a list of downloaded Mediawiki pages.
 	 */
-	public List<Page> queryContent(User user, List<String> listOfTitleStrings) {
+	public List<Page> queryContent(final User user, final List<String> listOfTitleStrings) {
 		return query(user, listOfTitleStrings, PROP, REVISIONS, RVPROP, "timestamp|user|comment|content");
 	}
 
@@ -170,7 +171,7 @@ public class Connector {
 	 *            a list of title Strings "ArticleA,ArticleB,..."
 	 * @return page list
 	 */
-	public List<Page> queryCategories(User user, List<String> listOfTitleStrings) {
+	public List<Page> queryCategories(final User user, final List<String> listOfTitleStrings) {
 		return query(user, listOfTitleStrings, PROP, CATEGORIES);
 	}
 
@@ -183,7 +184,7 @@ public class Connector {
 	 *            a list of title Strings "ArticleA,ArticleB,..."
 	 * @return page list
 	 */
-	public List<Page> queryInfo(User user, List<String> listOfTitleStrings) {
+	public List<Page> queryInfo(final User user, final List<String> listOfTitleStrings) {
 		return query(user, listOfTitleStrings, PROP, INFO);
 	}
 
@@ -196,7 +197,7 @@ public class Connector {
 	 *            a list of title Strings "ArticleA,ArticleB,..."
 	 * @return page list
 	 */
-	public List<Page> queryLinks(User user, List<String> listOfTitleStrings) {
+	public List<Page> queryLinks(final User user, final List<String> listOfTitleStrings) {
 		return query(user, listOfTitleStrings, PROP, LINKS);
 	}
 
@@ -211,7 +212,7 @@ public class Connector {
 	 *            a list of title Strings "ArticleA,ArticleB,..."
 	 * @return page list
 	 */
-	public List<Page> queryImageinfo(User user, List<String> listOfImageStrings) {
+	public List<Page> queryImageinfo(final User user, final List<String> listOfImageStrings) {
 		return query(user, listOfImageStrings, PROP, IMAGEINFO, IIPROP, URL);
 	}
 
@@ -227,7 +228,7 @@ public class Connector {
 	 *            scaled.
 	 * @return page list
 	 */
-	public List<Page> queryImageinfo(User user, List<String> listOfImageStrings, int imageWidth) {
+	public List<Page> queryImageinfo(final User user, final List<String> listOfImageStrings, final int imageWidth) {
 		return query(user, listOfImageStrings, PROP, IMAGEINFO, IIPROP, URL, IIURLWIDTH, Integer.toString(imageWidth));
 	}
 
@@ -240,12 +241,12 @@ public class Connector {
 	 *            a user defined query
 	 * @return page list
 	 */
-	public List<Page> query(User user, Query query) {
-		String response = sendXML(user, query);
+	public List<Page> query(final User user, final Query query) {
+		final String response = sendXML(user, query);
 		try {
 			return parsePageBody(response).getPagesList();
 		} catch (SAXException | IOException e) {
-			logger.error(null, e);
+			Throwables.log(log, e);
 		}
 		return null;
 	}
@@ -261,22 +262,22 @@ public class Connector {
 	 *            pairs of query strings which should be appended to the Mediawiki API URL
 	 * @return page list
 	 */
-	private List<Page> query(User user, List<String> listOfTitleStrings, String... valuePairs) {
+	private List<Page> query(final User user, final List<String> listOfTitleStrings, final String... valuePairs) {
 		try {
-			String responseBody = queryXML(user, listOfTitleStrings, valuePairs);
+			final String responseBody = queryXML(user, listOfTitleStrings, valuePairs);
 			if (responseBody != null) {
 				return parsePageBody(responseBody).getPagesList();
 			}
 		} catch (IOException | SAXException e) {
-			logger.error(null, e);
+			Throwables.log(log, e);
 		}
 		// no pages parsed!?
 		return new ArrayList<>();
 	}
 
-	private String queryXML(User user, List<String> listOfTitleStrings, String[] valuePairs) {
-		String titlesString = formatTitleString(listOfTitleStrings);
-		List<NameValuePair> parameters = new ArrayList<>();
+	private String queryXML(final User user, final List<String> listOfTitleStrings, final String[] valuePairs) {
+		final String titlesString = formatTitleString(listOfTitleStrings);
+		final List<NameValuePair> parameters = new ArrayList<>();
 		parameters.add(new BasicNameValuePair(PARAM_ACTION, ACTION_QUERY));
 		parameters.add(new BasicNameValuePair(PARAM_CONTINUE, ""));
 
@@ -293,8 +294,8 @@ public class Connector {
 				createAuthenticatedRequest(user, parameters.toArray(new NameValuePair[parameters.size()])));
 	}
 
-	private String formatTitleString(List<String> titles) {
-		StringBuilder titlesString = new StringBuilder();
+	private String formatTitleString(final List<String> titles) {
+		final StringBuilder titlesString = new StringBuilder();
 		for (int i = 0; i < titles.size(); i++) {
 			titlesString.append(titles.get(i));
 			if (i < titles.size() - 1) {
@@ -304,17 +305,17 @@ public class Connector {
 		return titlesString.toString();
 	}
 
-	public String sendXML(User user, RequestBuilder requestBuilder) {
+	public String sendXML(final User user, final RequestBuilder requestBuilder) {
 		return executeHttpMethod(createAuthenticatedRequest(user, requestBuilder.getParameters()));
 	}
 
-	private HttpRequestBase createAuthenticatedRequest(User user, NameValuePair[] parameters) {
+	private HttpRequestBase createAuthenticatedRequest(final User user, final NameValuePair[] parameters) {
 		final String actionUrl = user.getActionUrl();
 
 		if (actionUrl == null || actionUrl.trim().length() == 0) {
 			throw new IllegalArgumentException("no action url");
 		}
-		List<NameValuePair> parameterList = new ArrayList<>();
+		final List<NameValuePair> parameterList = new ArrayList<>();
 		parameterList.add(new BasicNameValuePair(PARAM_FORMAT, FORMAT_XML));
 		Collections.addAll(parameterList, parameters);
 
@@ -325,14 +326,14 @@ public class Connector {
 					new BasicNameValuePair(PARAM_LOGIN_TOKEN, user.getToken())));
 		}
 
-		URIBuilder uriBuilder = new URIBuilder(URI.create(user.getActionUrl()));
-		HttpGet request = new HttpGet(uriBuilder.addParameters(parameterList).toString());
+		final URIBuilder uriBuilder = new URIBuilder(URI.create(user.getActionUrl()));
+		final HttpGet request = new HttpGet(uriBuilder.addParameters(parameterList).toString());
 		request.setHeader(HTTP.USER_AGENT, USER_AGENT);
 		return request;
 	}
 
-	private static String getAsXmlString(HttpResponse response) throws IOException {
-		ContentType type = ContentType.get(response.getEntity());
+	private static String getAsXmlString(final HttpResponse response) throws IOException {
+		final ContentType type = ContentType.get(response.getEntity());
 		if (!type.getMimeType().startsWith("text/xml")) {
 			throw new IOException("Invalid content-type: " + type);
 		}
@@ -340,7 +341,7 @@ public class Connector {
 		String responseBody = EntityUtils.toString(response.getEntity());
 		if (responseBody.length() > 0 && responseBody.charAt(0) != '<') {
 			// try to find XML.
-			int index = responseBody.indexOf("<?xml");
+			final int index = responseBody.indexOf("<?xml");
 			if (index > 0) {
 				responseBody = responseBody.substring(index);
 			}
@@ -348,27 +349,27 @@ public class Connector {
 		return responseBody;
 	}
 
-	private String executeHttpMethod(HttpRequestBase request) {
+	private String executeHttpMethod(final HttpRequestBase request) {
 		try {
-			HttpResponse response = client.execute(request);
+			final HttpResponse response = client.execute(request);
 
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				return getAsXmlString(response);
 			}
-		} catch (IOException e) {
-			logger.error("error fetching data", e);
+		} catch (final IOException e) {
+			Throwables.log(log, e);
 		} finally {
 			request.reset();
 		}
 		return null;
 	}
 
-	private XMLPagesParser parsePageBody(String responseBody) throws SAXException, IOException {
-		XMLPagesParser parser = new XMLPagesParser(responseBody);
+	private XMLPagesParser parsePageBody(final String responseBody) throws SAXException, IOException {
+		final XMLPagesParser parser = new XMLPagesParser(responseBody);
 		parser.parse();
-		List<String> warnings = parser.getWarnings();
+		final List<String> warnings = parser.getWarnings();
 		if (!warnings.isEmpty()) {
-			logger.warn("parser warnings: " + warnings);
+			log.warn("parser warnings: " + warnings);
 		}
 		return parser;
 	}

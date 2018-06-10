@@ -1,43 +1,46 @@
 package info.bliki.wiki.template;
 
-import info.bliki.wiki.model.Configuration;
-import info.bliki.wiki.model.IWikiModel;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
+
+import info.bliki.util.Throwables;
+import info.bliki.wiki.model.Configuration;
+import info.bliki.wiki.model.IWikiModel;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A template parser function for <code>{{formatnum: ... }}</code> <i>lower case</i> syntax. See
  * <a href="https://en.wikipedia.org/wiki/Help:Variable#Formatting">Wikipedia - Help:Variable#Formatting</a>
  *
  */
+@Slf4j
 public class Formatnum extends AbstractTemplateFunction {
 	public final static ITemplateFunction CONST = new Formatnum();
 
 	@Override
-	public String parseFunction(List<String> list, IWikiModel model, char[] src, int beginIndex, int endIndex,
-			boolean isSubst) {
+	public String parseFunction(final List<String> list, final IWikiModel model, final char[] src, final int beginIndex,
+			final int endIndex, final boolean isSubst) {
 		if (list.size() > 0) {
 			String result = isSubst ? list.get(0) : parseTrim(list.get(0), model);
 			if (result.length() > 0) {
 				try {
-					NumberFormat nf = NumberFormat.getNumberInstance(model.getLocale());
+					final NumberFormat nf = NumberFormat.getNumberInstance(model.getLocale());
 					if (list.size() > 1 && list.get(1).equalsIgnoreCase("r")) {
-						Number num = nf.parse(result);
+						final Number num = nf.parse(result);
 						if (num instanceof Double) {
 							result = Expr.getWikiNumberFormat(num.doubleValue(), model);
 						} else {
 							result = num.toString();
 						}
 					} else {
-						Double dbl = new Double(result);
+						final Double dbl = new Double(result);
 						// decimal number that will be rounded down by NumberFormat#format()?
 						if (result.endsWith(".")) {
-							DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(model.getLocale());
+							final DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(model.getLocale());
 							result = nf.format(dbl) + df.getDecimalFormatSymbols().getDecimalSeparator();
 						} else if (dbl == dbl.intValue()) {
-							int idx = result.indexOf('.');
+							final int idx = result.indexOf('.');
 							if (idx != -1) {
 								nf.setMinimumFractionDigits(result.length() - 1 - idx);
 							}
@@ -46,12 +49,12 @@ public class Formatnum extends AbstractTemplateFunction {
 							result = nf.format(dbl);
 						}
 					}
-				} catch (Exception ex) {
+				} catch (final Exception ex) {
 					if (Configuration.DEBUG) {
-						System.out.println("formatnum error: " + list.toString());
+						log.debug("formatnum error: " + list.toString());
 					}
 					if (Configuration.STACKTRACE) {
-						ex.printStackTrace();
+						Throwables.log(log, ex);
 					}
 				}
 			}

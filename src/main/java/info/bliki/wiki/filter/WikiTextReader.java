@@ -1,13 +1,17 @@
 package info.bliki.wiki.filter;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import info.bliki.util.Throwables;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class WikiTextReader {
 	/**
 	 * Constant for an empty char array
@@ -18,23 +22,23 @@ public class WikiTextReader {
 
 	private final String fTemplateBaseFilename;
 
-	public WikiTextReader(String templateBaseFileName) {
+	public WikiTextReader(final String templateBaseFileName) {
 		fTemplateBaseFilename = templateBaseFileName;
 	}
 
-	public String getPlainContent(String wikiTitle) {
-		String filename = fTemplateBaseFilename.replace("${title}", wikiTitle);
+	public String getPlainContent(final String wikiTitle) {
+		final String filename = fTemplateBaseFilename.replace("${title}", wikiTitle);
 		FileInputStream fis = null;
 		try {
 			fis = new FileInputStream(filename);
 			return new String(getInputStreamAsCharArray(fis, -1, UTF_8));
-		} catch (IOException e) {
-			// e.printStackTrace();
+		} catch (final IOException e) {
+			Throwables.log(log, e);
 		} finally {
 			if (fis != null) {
 				try {
 					fis.close();
-				} catch (IOException e) {
+				} catch (final IOException e) {
 				}
 			}
 		}
@@ -49,7 +53,8 @@ public class WikiTextReader {
 	 * @throws IOException
 	 *             if a problem occured reading the stream.
 	 */
-	public static char[] getInputStreamAsCharArray(InputStream stream, int length, Charset charset) throws IOException {
+	public static char[] getInputStreamAsCharArray(final InputStream stream, final int length, final Charset charset)
+			throws IOException {
 		InputStreamReader reader;
 		reader = charset == null ? new InputStreamReader(stream) : new InputStreamReader(stream, charset);
 		char[] contents;
@@ -58,7 +63,7 @@ public class WikiTextReader {
 			int contentsLength = 0;
 			int amountRead = -1;
 			do {
-				int amountRequested = Math.max(stream.available(), DEFAULT_READING_SIZE); // read at least 8K
+				final int amountRequested = Math.max(stream.available(), DEFAULT_READING_SIZE); // read at least 8K
 
 				// resize contents if needed
 				if (contentsLength + amountRequested > contents.length) {
@@ -83,7 +88,7 @@ public class WikiTextReader {
 			contents = new char[length];
 			int len = 0;
 			int readSize = 0;
-			while ((readSize != -1) && (len != length)) {
+			while (readSize != -1 && len != length) {
 				// See PR 1FMS89U
 				// We record first the read size. In this case len is the actual
 				// read size.
@@ -94,8 +99,9 @@ public class WikiTextReader {
 			// Now we need to resize in case the default encoding used more than
 			// one byte for each
 			// character
-			if (len != length)
-				System.arraycopy(contents, 0, (contents = new char[len]), 0, len);
+			if (len != length) {
+				System.arraycopy(contents, 0, contents = new char[len], 0, len);
+			}
 		}
 
 		return contents;

@@ -19,14 +19,13 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import info.bliki.htmlcleaner.BaseToken;
 import info.bliki.htmlcleaner.ContentToken;
 import info.bliki.htmlcleaner.TagNode;
 import info.bliki.htmlcleaner.TagToken;
 import info.bliki.htmlcleaner.Utils;
+import info.bliki.util.Throwables;
 import info.bliki.wiki.filter.AbstractWikipediaParser;
 import info.bliki.wiki.filter.Encoder;
 import info.bliki.wiki.filter.HTMLConverter;
@@ -52,12 +51,13 @@ import info.bliki.wiki.tags.util.TagStack;
 import info.bliki.wiki.template.ITemplateFunction;
 import info.bliki.wiki.template.extension.AttributeList;
 import info.bliki.wiki.template.extension.AttributeRenderer;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Standard model implementation for the Wikipedia syntax.
  */
+@Slf4j
 public abstract class AbstractWikiModel implements IWikiModel, IContext {
-	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static int fNextNumberCounter = 0;
 	protected ArrayList<Reference> fReferences;
@@ -1105,9 +1105,9 @@ public abstract class AbstractWikiModel implements IWikiModel, IContext {
 			// true);
 			TemplateParser.parseRecursive(rawWikiText, this, buf, parseOnlySignature, true, null);
 
-		} catch (final Exception ioe) {
-			ioe.printStackTrace();
-			buf.append("<span class=\"error\">TemplateParser exception: ").append(ioe.getClass().getSimpleName())
+		} catch (final Exception e) {
+			Throwables.log(log, e);
+			buf.append("<span class=\"error\">TemplateParser exception: ").append(e.getClass().getSimpleName())
 					.append("</span>");
 		}
 		return buf.toString();

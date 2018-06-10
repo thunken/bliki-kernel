@@ -37,6 +37,9 @@
 
 package info.bliki.htmlcleaner;
 
+import info.bliki.util.Throwables;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * <p>
  * HTML tag token - descendants are start (TagNode) and end token (EndTagToken).
@@ -45,6 +48,7 @@ package info.bliki.htmlcleaner;
  * Created by: Vladimir Nikic<br/>
  * Date: November, 2006.
  */
+@Slf4j
 public abstract class TagToken implements BaseToken, Cloneable {
 
 	protected String name;
@@ -54,7 +58,7 @@ public abstract class TagToken implements BaseToken, Cloneable {
 	public TagToken() {
 	}
 
-	public TagToken(String name) {
+	public TagToken(final String name) {
 		this.name = name;
 	}
 
@@ -62,7 +66,7 @@ public abstract class TagToken implements BaseToken, Cloneable {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
@@ -70,7 +74,7 @@ public abstract class TagToken implements BaseToken, Cloneable {
 		return originalSource;
 	}
 
-	public void setOriginalSource(String originalSource) {
+	public void setOriginalSource(final String originalSource) {
 		this.originalSource = originalSource;
 	}
 
@@ -108,7 +112,7 @@ public abstract class TagToken implements BaseToken, Cloneable {
 	abstract public String getParents();
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (obj instanceof TagToken) {
 			return name.equals(obj.toString());
 		}
@@ -128,8 +132,8 @@ public abstract class TagToken implements BaseToken, Cloneable {
 			tt.name = name;
 			tt.originalSource = originalSource;
 			return tt;
-		} catch (CloneNotSupportedException e) {
-			e.printStackTrace();
+		} catch (final CloneNotSupportedException e) {
+			Throwables.log(log, e);
 		}
 		return null;
 	}

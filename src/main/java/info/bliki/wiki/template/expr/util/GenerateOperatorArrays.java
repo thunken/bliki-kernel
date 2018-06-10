@@ -1,15 +1,5 @@
 package info.bliki.wiki.template.expr.util;
 
-import info.bliki.wiki.template.expr.operator.ASTNodeFactory;
-import info.bliki.wiki.template.expr.operator.DivideOperator;
-import info.bliki.wiki.template.expr.operator.InfixOperator;
-import info.bliki.wiki.template.expr.operator.Operator;
-import info.bliki.wiki.template.expr.operator.PostfixOperator;
-import info.bliki.wiki.template.expr.operator.PreMinusOperator;
-import info.bliki.wiki.template.expr.operator.PrePlusOperator;
-import info.bliki.wiki.template.expr.operator.PrefixOperator;
-import info.bliki.wiki.template.expr.operator.SubtractOperator;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,12 +12,25 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import info.bliki.util.Throwables;
+import info.bliki.wiki.template.expr.operator.ASTNodeFactory;
+import info.bliki.wiki.template.expr.operator.DivideOperator;
+import info.bliki.wiki.template.expr.operator.InfixOperator;
+import info.bliki.wiki.template.expr.operator.Operator;
+import info.bliki.wiki.template.expr.operator.PostfixOperator;
+import info.bliki.wiki.template.expr.operator.PreMinusOperator;
+import info.bliki.wiki.template.expr.operator.PrePlusOperator;
+import info.bliki.wiki.template.expr.operator.PrefixOperator;
+import info.bliki.wiki.template.expr.operator.SubtractOperator;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Utility for generating source codes for the
  * <code>info.bliki.wiki.template.expr.operator.ASTNodeFactory's HEADER_STRINGS, OPERATOR_STRINGS, OPERATORS</code>
  * arrays from the operators.txt textfile description
  *
  */
+@Slf4j
 public class GenerateOperatorArrays {
 
 	/**
@@ -130,8 +133,8 @@ public class GenerateOperatorArrays {
 
 			}
 			System.out.println("};");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		} catch (final FileNotFoundException e) {
+			Throwables.log(log, e);
 		}
 	}
 
@@ -192,7 +195,7 @@ public class GenerateOperatorArrays {
 			}
 
 		} catch (final Exception e) {
-			e.printStackTrace();
+			Throwables.log(log, e);
 		}
 	}
 }

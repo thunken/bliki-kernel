@@ -1,12 +1,6 @@
 package info.bliki.wiki.dump;
 
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,7 +11,16 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.zip.GZIPInputStream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+import info.bliki.util.Throwables;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A Wikipedia XML dump file parser
@@ -28,7 +31,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  *
  * @author Marco Schmidt
  */
+@Slf4j
 public class WikiXMLParser extends DefaultHandler {
+
 	private static final String WIKIPEDIA_SITEINFO = "siteinfo";
 	private static final String WIKIPEDIA_TITLE = "title";
 	private static final String WIKIPEDIA_TEXT = "text";
@@ -43,16 +48,16 @@ public class WikiXMLParser extends DefaultHandler {
 	private WikiArticle fArticle;
 	private boolean fRevision;
 	private StringBuilder fData;
-	private XMLReader fXMLReader;
-	private Reader fReader;
+	private final XMLReader fXMLReader;
+	private final Reader fReader;
 
-	private IArticleFilter fArticleFilter;
+	private final IArticleFilter fArticleFilter;
 
-	public WikiXMLParser(File filename, IArticleFilter filter) throws IOException, SAXException {
+	public WikiXMLParser(final File filename, final IArticleFilter filter) throws IOException, SAXException {
 		this(getReader(filename), filter);
 	}
 
-	public WikiXMLParser(InputStream inputStream, IArticleFilter filter) throws SAXException {
+	public WikiXMLParser(final InputStream inputStream, final IArticleFilter filter) throws SAXException {
 		fArticleFilter = filter;
 		fXMLReader = XMLReaderFactory.createXMLReader();
 		fXMLReader.setContentHandler(this);
@@ -60,7 +65,7 @@ public class WikiXMLParser extends DefaultHandler {
 		fReader = new BufferedReader(new InputStreamReader(inputStream, UTF_8));
 	}
 
-	public WikiXMLParser(Reader reader, IArticleFilter filter) throws SAXException {
+	public WikiXMLParser(final Reader reader, final IArticleFilter filter) throws SAXException {
 		fArticleFilter = filter;
 		fXMLReader = XMLReaderFactory.createXMLReader();
 		fXMLReader.setContentHandler(this);
@@ -72,7 +77,7 @@ public class WikiXMLParser extends DefaultHandler {
 	 * @return a Reader created from wikiDumpFilename
 	 * @throws java.io.IOException
 	 */
-	public static Reader getReader(File wikiDumpFilename) throws IOException {
+	public static Reader getReader(final File wikiDumpFilename) throws IOException {
 		InputStream inputStream = new FileInputStream(wikiDumpFilename);
 		if (wikiDumpFilename.getName().endsWith(".gz")) {
 			inputStream = new GZIPInputStream(inputStream);
@@ -86,7 +91,7 @@ public class WikiXMLParser extends DefaultHandler {
 		if (fData == null) {
 			return null;
 		} else {
-			String s = fData.toString();
+			final String s = fData.toString();
 			fData = null;
 			return s;
 		}
@@ -103,7 +108,8 @@ public class WikiXMLParser extends DefaultHandler {
 	}
 
 	@Override
-	public void startElement(String namespaceURI, String localName, String qName, Attributes atts) {
+	public void startElement(final String namespaceURI, final String localName, final String qName,
+			final Attributes atts) {
 		// fAttributes = atts;
 		fData = null;
 		if (WIKIPEDIA_SITEINFO.equals(qName)) {
@@ -130,7 +136,7 @@ public class WikiXMLParser extends DefaultHandler {
 	}
 
 	@Override
-	public void endElement(String uri, String name, String qName) throws SAXException {
+	public void endElement(final String uri, final String name, final String qName) throws SAXException {
 		try {
 			if (fArticle == null) {
 				if (fSiteinfo != null) {
@@ -153,7 +159,7 @@ public class WikiXMLParser extends DefaultHandler {
 					fArticle.setText(getString());
 					try {
 						fArticleFilter.process(fArticle, fSiteinfo);
-					} catch (IOException e) {
+					} catch (final IOException e) {
 						throw new SAXException(e);
 					}
 					// emit(wikiText);
@@ -171,9 +177,8 @@ public class WikiXMLParser extends DefaultHandler {
 			}
 			fData = null;
 			// fAttributes = null;
-
-		} catch (RuntimeException re) {
-			re.printStackTrace();
+		} catch (final RuntimeException re) {
+			Throwables.log(log, re);
 		}
 	}
 
@@ -183,7 +188,7 @@ public class WikiXMLParser extends DefaultHandler {
 	 * @see org.xml.sax.helpers.DefaultHandler#characters(char[], int, int)
 	 */
 	@Override
-	public void characters(char[] ch, int start, int length) throws SAXException {
+	public void characters(final char[] ch, final int start, final int length) throws SAXException {
 		if (fData == null) {
 			fData = new StringBuilder(length);
 		}

@@ -1,8 +1,5 @@
 package info.bliki.wiki.template.expr.util;
 
-import info.bliki.wiki.template.expr.SyntaxError;
-import info.bliki.wiki.template.expr.eval.DoubleEvaluator;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -10,11 +7,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 
+import info.bliki.util.Throwables;
+import info.bliki.wiki.template.expr.SyntaxError;
+import info.bliki.wiki.template.expr.eval.DoubleEvaluator;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * A java console program to run the evaluator interactively. Utility for testing the <code>{{ #expr: ... }}</code> and
  * <code>{{ #ifexpr: ... }}</code> expression evaluator.
  *
  */
+@Slf4j
 public class Console {
 
 	private File fFile;
@@ -24,8 +27,8 @@ public class Console {
 		Console console;
 		try {
 			console = new Console();
-		} catch (final SyntaxError e1) {
-			e1.printStackTrace();
+		} catch (final SyntaxError e) {
+			Throwables.log(log, e);
 			return;
 		}
 		String expr = null;
@@ -42,10 +45,8 @@ public class Console {
 				}
 				f.close();
 				System.out.println(console.interpreter(buff.toString()));
-			} catch (final IOException ioe) {
-				final String msg = "Cannot read from the specified file. "
-						+ "Make sure the path exists and you have read permission.";
-				System.out.println(msg);
+			} catch (final IOException e) {
+				Throwables.log(log, e);
 				return;
 			}
 		}
@@ -54,13 +55,13 @@ public class Console {
 			try {
 				expr = console.readString(System.out, ">>> ");
 				if (expr != null) {
-					if ((expr.length() >= 4) && expr.toLowerCase().substring(0, 4).equals("exit")) {
+					if (expr.length() >= 4 && expr.toLowerCase().substring(0, 4).equals("exit")) {
 						break;
 					}
 					System.out.println(console.interpreter(expr));
 				}
 			} catch (final Exception e) {
-				System.out.println(e.getMessage());
+				Throwables.log(log, e);
 			}
 		}
 	}
@@ -128,14 +129,11 @@ public class Console {
 	 */
 	public String interpreter(final String strEval) {
 		try {
-			DoubleEvaluator engine = new DoubleEvaluator();
-			double d = engine.evaluate(strEval);
+			final DoubleEvaluator engine = new DoubleEvaluator();
+			final double d = engine.evaluate(strEval);
 			return Double.toString(d);
-		} catch (SyntaxError e) {
-			System.err.println();
-			System.err.println(e.getMessage());
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (final Exception e) {
+			Throwables.log(log, e);
 		}
 		return "";
 	}
@@ -170,7 +168,7 @@ public class Console {
 			while (!done) {
 				final String s = in.readLine();
 				if (s != null) {
-					if ((s.length() > 0) && (s.charAt(s.length() - 1) != '\\')) {
+					if (s.length() > 0 && s.charAt(s.length() - 1) != '\\') {
 						input.append(s);
 						done = true;
 					} else {
@@ -182,8 +180,8 @@ public class Console {
 					}
 				}
 			}
-		} catch (final IOException e1) {
-			e1.printStackTrace();
+		} catch (final IOException e) {
+			Throwables.log(log, e);
 		}
 		return input.toString();
 	}

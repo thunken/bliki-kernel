@@ -1,5 +1,8 @@
 package info.bliki.wiki.filter;
 
+import static info.bliki.wiki.filter.AbstractWikipediaParser.getRedirectedTemplateContent;
+import static info.bliki.wiki.filter.WikipediaParser.parseRedirect;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -9,9 +12,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import info.bliki.util.Throwables;
 import info.bliki.wiki.model.Configuration;
 import info.bliki.wiki.model.IWikiModel;
 import info.bliki.wiki.tags.TemplateTag;
@@ -19,17 +20,14 @@ import info.bliki.wiki.tags.util.WikiTagNode;
 import info.bliki.wiki.template.ITemplateFunction;
 import info.bliki.wiki.template.Safesubst;
 import info.bliki.wiki.template.Subst;
-
-import static info.bliki.wiki.filter.AbstractWikipediaParser.getRedirectedTemplateContent;
-import static info.bliki.wiki.filter.TemplateParser.createSingleParameter;
-import static info.bliki.wiki.filter.TemplateParser.mergeParameters;
-import static info.bliki.wiki.filter.WikipediaParser.parseRedirect;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A template parser for the first pass in the parsing of a Wikipedia text
  *
  * @see WikipediaParser for the second pass
  */
+@Slf4j
 public class TemplateParser extends AbstractParser {
 	public static final String TEMPLATE_PARSER_ERROR = "TemplateParserError";
 
@@ -39,30 +37,28 @@ public class TemplateParser extends AbstractParser {
 	private static final int SUBST_LENGTH = SUBST.length();
 	private static final int SAFESUBST_LENGTH = SAFESUBST.length();
 
-	protected static Logger logger = LoggerFactory.getLogger(TemplateParser.class);
-
 	private final boolean fParseOnlySignature;
 	private final boolean fRenderTemplate;
 	private boolean fOnlyIncludeFlag;
 
-	public TemplateParser(String stringSource) {
+	public TemplateParser(final String stringSource) {
 		this(stringSource, false, false);
 	}
 
-	public TemplateParser(String stringSource, boolean parseOnlySignature, boolean renderTemplate) {
+	public TemplateParser(final String stringSource, final boolean parseOnlySignature, final boolean renderTemplate) {
 		this(stringSource, parseOnlySignature, renderTemplate, false);
 	}
 
-	public TemplateParser(String stringSource, boolean parseOnlySignature, boolean renderTemplate,
-			boolean onlyIncludeFlag) {
+	public TemplateParser(final String stringSource, final boolean parseOnlySignature, final boolean renderTemplate,
+			final boolean onlyIncludeFlag) {
 		super(stringSource);
 		fParseOnlySignature = parseOnlySignature;
 		fRenderTemplate = renderTemplate;
 		fOnlyIncludeFlag = onlyIncludeFlag;
 	}
 
-	public static void parse(String rawWikitext, IWikiModel wikiModel, Appendable writer, boolean renderTemplate)
-			throws IOException {
+	public static void parse(final String rawWikitext, final IWikiModel wikiModel, final Appendable writer,
+			final boolean renderTemplate) throws IOException {
 		parse(rawWikitext, wikiModel, writer, false, renderTemplate);
 	}
 
@@ -76,13 +72,13 @@ public class TemplateParser extends AbstractParser {
 	 *            change only the signature string and ignore templates and comments parsing
 	 * @param renderTemplate
 	 */
-	public static void parse(String rawWikitext, IWikiModel wikiModel, Appendable writer, boolean parseOnlySignature,
-			boolean renderTemplate) throws IOException {
+	public static void parse(final String rawWikitext, final IWikiModel wikiModel, final Appendable writer,
+			final boolean parseOnlySignature, final boolean renderTemplate) throws IOException {
 		parseRecursive(rawWikitext, wikiModel, writer, parseOnlySignature, renderTemplate);
 	}
 
-	protected static void parseRecursive(String rawWikitext, IWikiModel wikiModel, Appendable writer,
-			boolean parseOnlySignature, boolean renderTemplate) throws IOException {
+	protected static void parseRecursive(final String rawWikitext, final IWikiModel wikiModel, final Appendable writer,
+			final boolean parseOnlySignature, final boolean renderTemplate) throws IOException {
 		parseRecursive(rawWikitext, wikiModel, writer, parseOnlySignature, renderTemplate, null);
 	}
 
@@ -96,10 +92,10 @@ public class TemplateParser extends AbstractParser {
 	 * @return true if an onlyinclude section was parsed
 	 * @throws IOException
 	 */
-	private boolean parsePreprocessRecursive(StringBuilder writer, int diff) throws IOException {
-		StringBuilder buf = new StringBuilder(fCurrentPosition - fWhiteStartPosition);
+	private boolean parsePreprocessRecursive(final StringBuilder writer, final int diff) throws IOException {
+		final StringBuilder buf = new StringBuilder(fCurrentPosition - fWhiteStartPosition);
 		appendContent(buf, fWhiteStart, fWhiteStartPosition, diff, true);
-		int startIndex = Util.indexOfTemplateParsing(buf);
+		final int startIndex = Util.indexOfTemplateParsing(buf);
 		if (startIndex < 0) {
 			writer.append(buf);
 			return false;
@@ -113,18 +109,18 @@ public class TemplateParser extends AbstractParser {
 	 * Preprocess parsing of the <code>&lt;includeonly&gt;</code>, <code>&lt;onlyinclude&gt;</code> and
 	 * <code>&lt;noinclude&gt;</code> tags. Also performs template parameter substitution.
 	 */
-	public static boolean parsePreprocessRecursive(int startIndex, String rawWikitext, IWikiModel wikiModel,
-			StringBuilder writer, boolean renderTemplate, boolean onlyIncludeFlag,
-			Map<String, String> templateParameterMap) throws IOException {
+	public static boolean parsePreprocessRecursive(final int startIndex, final String rawWikitext,
+			final IWikiModel wikiModel, final StringBuilder writer, final boolean renderTemplate,
+			final boolean onlyIncludeFlag, final Map<String, String> templateParameterMap) throws IOException {
 		try {
-			int templateLevel = wikiModel.incrementTemplateRecursionLevel();
+			final int templateLevel = wikiModel.incrementTemplateRecursionLevel();
 			if (templateLevel > Configuration.TEMPLATE_RECURSION_LIMIT) {
 				writer.append("Error - template recursion limit exceeded parsing templates.");
 				return false;
 			}
 
-			StringBuilder sb = new StringBuilder(rawWikitext.length());
-			TemplateParser parser = new TemplateParser(rawWikitext, false, renderTemplate, onlyIncludeFlag);
+			final StringBuilder sb = new StringBuilder(rawWikitext.length());
+			final TemplateParser parser = new TemplateParser(rawWikitext, false, renderTemplate, onlyIncludeFlag);
 			parser.setModel(wikiModel);
 			parser.runPreprocessParser(0, startIndex, sb, /* ignoreTemplateTags */ false);
 			writer.append(substituteParameters(templateParameterMap, wikiModel, sb));
@@ -138,15 +134,15 @@ public class TemplateParser extends AbstractParser {
 		}
 	}
 
-	private static StringBuilder substituteParameters(Map<String, String> templateParameterMap, IWikiModel wikiModel,
-			StringBuilder writer) {
+	private static StringBuilder substituteParameters(final Map<String, String> templateParameterMap,
+			final IWikiModel wikiModel, final StringBuilder writer) {
 		final boolean hasParamsToReplace = templateParameterMap != null && !templateParameterMap.isEmpty();
 		final boolean hasEmptyDefaultParams = writer.indexOf("{{{|") != -1;
 
 		if (hasParamsToReplace || hasEmptyDefaultParams) {
-			TemplateParser scanner = new TemplateParser(writer.toString());
+			final TemplateParser scanner = new TemplateParser(writer.toString());
 			scanner.setModel(wikiModel);
-			StringBuilder result = scanner.replaceTemplateParameters(templateParameterMap, 0);
+			final StringBuilder result = scanner.replaceTemplateParameters(templateParameterMap, 0);
 			if (result != null) {
 				return result;
 			}
@@ -154,10 +150,10 @@ public class TemplateParser extends AbstractParser {
 		return writer;
 	}
 
-	public static void parseRecursive(String rawWikitext, IWikiModel wikiModel, Appendable writer,
-			boolean parseOnlySignature, boolean renderTemplate, Map<String, String> templateParameterMap)
-			throws IOException {
-		int startIndex = Util.indexOfTemplateParsing(rawWikitext);
+	public static void parseRecursive(final String rawWikitext, final IWikiModel wikiModel, final Appendable writer,
+			final boolean parseOnlySignature, final boolean renderTemplate,
+			final Map<String, String> templateParameterMap) throws IOException {
+		final int startIndex = Util.indexOfTemplateParsing(rawWikitext);
 		if (startIndex < 0) {
 			writer.append(rawWikitext);
 			return;
@@ -172,7 +168,7 @@ public class TemplateParser extends AbstractParser {
 		}
 
 		try {
-			int templateLevel = wikiModel.incrementTemplateRecursionLevel();
+			final int templateLevel = wikiModel.incrementTemplateRecursionLevel();
 			if (templateLevel > Configuration.TEMPLATE_RECURSION_LIMIT) {
 				writer.append("Error - template recursion limit exceeded parsing templates.");
 				return;
@@ -200,7 +196,7 @@ public class TemplateParser extends AbstractParser {
 			if (!renderTemplate) {
 				final String redirectedLink = parseRedirect(sb.toString(), wikiModel);
 				if (redirectedLink != null) {
-					String redirectedContent = getRedirectedTemplateContent(wikiModel, redirectedLink,
+					final String redirectedContent = getRedirectedTemplateContent(wikiModel, redirectedLink,
 							templateParameterMap);
 					if (redirectedContent != null) {
 						parseRecursive(redirectedContent, wikiModel, writer, parseOnlySignature, renderTemplate,
@@ -217,11 +213,11 @@ public class TemplateParser extends AbstractParser {
 		}
 	}
 
-	private static void handleParserError(Throwable e, Appendable writer) {
-		logger.error(TEMPLATE_PARSER_ERROR, e);
+	private static void handleParserError(final Throwable e, final Appendable writer) {
+		Throwables.log(log, e);
 		try {
 			writer.append(TEMPLATE_PARSER_ERROR).append(':').append(e.getClass().getSimpleName());
-		} catch (IOException ignored) {
+		} catch (final IOException ignored) {
 		}
 	}
 
@@ -235,7 +231,8 @@ public class TemplateParser extends AbstractParser {
 	 *            don't parse special template tags like &lt;includeonly&gt;, &lt;noinclude&gt;, &lt;onlyinclude&gt;
 	 * @throws IOException
 	 */
-	protected void runPreprocessParser(StringBuilder writer, boolean ignoreTemplateTags) throws IOException {
+	protected void runPreprocessParser(final StringBuilder writer, final boolean ignoreTemplateTags)
+			throws IOException {
 		runPreprocessParser(fCurrentPosition, fCurrentPosition, writer, ignoreTemplateTags);
 	}
 
@@ -253,8 +250,8 @@ public class TemplateParser extends AbstractParser {
 	 *            don't parse special template tags like &lt;includeonly&gt;, &lt;noinclude&gt;, &lt;onlyinclude&gt;
 	 * @throws IOException
 	 */
-	protected void runPreprocessParser(int whiteStartPosition, int currentPosition, StringBuilder writer,
-			boolean ignoreTemplateTags) throws IOException {
+	protected void runPreprocessParser(final int whiteStartPosition, final int currentPosition,
+			final StringBuilder writer, final boolean ignoreTemplateTags) throws IOException {
 		fWhiteStart = true;
 		fWhiteStartPosition = whiteStartPosition;
 		int oldPosition;
@@ -275,7 +272,7 @@ public class TemplateParser extends AbstractParser {
 					}
 					break;
 				case '<':
-					int htmlStartPosition = fCurrentPosition;
+					final int htmlStartPosition = fCurrentPosition;
 					if (!fParseOnlySignature && parseIncludeWikiTags(writer, ignoreTemplateTags)) {
 						continue;
 					}
@@ -283,7 +280,7 @@ public class TemplateParser extends AbstractParser {
 					break;
 				case '~':
 					int tildeCounter;
-					if ((fSource.length > fCurrentPosition + 1) && fSource[fCurrentPosition] == '~'
+					if (fSource.length > fCurrentPosition + 1 && fSource[fCurrentPosition] == '~'
 							&& fSource[fCurrentPosition + 1] == '~') {
 						// parse signatures '~~~', '~~~~' or '~~~~~'
 						tildeCounter = 3;
@@ -294,12 +291,12 @@ public class TemplateParser extends AbstractParser {
 									tildeCounter = 5;
 								}
 							}
-						} catch (IndexOutOfBoundsException e1) {
+						} catch (final IndexOutOfBoundsException e1) {
 							// end of scanner text
 						}
 						appendContent(writer, fWhiteStart, fWhiteStartPosition, 1, true);
 						fWikiModel.appendSignature(writer, tildeCounter);
-						fCurrentPosition += (tildeCounter - 1);
+						fCurrentPosition += tildeCounter - 1;
 						fWhiteStart = true;
 						fWhiteStartPosition = fCurrentPosition;
 					}
@@ -312,31 +309,32 @@ public class TemplateParser extends AbstractParser {
 
 			}
 			// -----------------end switch while try--------------------
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// end of scanner text
 		}
 		try {
 			if (!fOnlyIncludeFlag) {
 				appendContent(writer, fWhiteStart, fWhiteStartPosition, 1, true);
 			}
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// end of scanner text
 		}
 	}
 
 	private boolean isSubsOrSafesubst() {
 		if (fSource[fCurrentPosition] == '{' && fSource.length > fCurrentPosition + SUBST_LENGTH) {
-			for (int pos = fCurrentPosition + 1; pos < fSource.length; pos++)
+			for (int pos = fCurrentPosition + 1; pos < fSource.length; pos++) {
 				if (!Character.isWhitespace(fSource[pos])) {
 					return fSource[pos] == 's';
 				}
+			}
 			return false;
 		} else {
 			return false;
 		}
 	}
 
-	private void runParser(Appendable writer) throws IOException {
+	private void runParser(final Appendable writer) throws IOException {
 		fWhiteStart = true;
 		fWhiteStartPosition = fCurrentPosition;
 		try {
@@ -346,7 +344,7 @@ public class TemplateParser extends AbstractParser {
 				// ---------Identify the next token-------------
 				switch (fCurrentCharacter) {
 				case '{': // wikipedia template handling
-					int oldPosition = fCurrentPosition;
+					final int oldPosition = fCurrentPosition;
 					if (!fParseOnlySignature && parseTemplateOrTemplateParameter(writer)) {
 						fWhiteStart = true;
 						fWhiteStartPosition = fCurrentPosition;
@@ -355,7 +353,7 @@ public class TemplateParser extends AbstractParser {
 					fCurrentPosition = oldPosition;
 					break;
 				case '<':
-					int htmlStartPosition = fCurrentPosition;
+					final int htmlStartPosition = fCurrentPosition;
 					if (!fParseOnlySignature && parseSpecialWikiTags(writer)) {
 						continue;
 					}
@@ -363,7 +361,7 @@ public class TemplateParser extends AbstractParser {
 					break;
 				case '~':
 					int tildeCounter = 0;
-					if ((fSource.length > fCurrentPosition + 1) && fSource[fCurrentPosition] == '~'
+					if (fSource.length > fCurrentPosition + 1 && fSource[fCurrentPosition] == '~'
 							&& fSource[fCurrentPosition + 1] == '~') {
 						// parse signatures '~~~', '~~~~' or '~~~~~'
 						tildeCounter = 3;
@@ -374,12 +372,12 @@ public class TemplateParser extends AbstractParser {
 									tildeCounter = 5;
 								}
 							}
-						} catch (IndexOutOfBoundsException e1) {
+						} catch (final IndexOutOfBoundsException e1) {
 							// end of scanner text
 						}
 						appendContent(writer, fWhiteStart, fWhiteStartPosition, 1, true);
 						fWikiModel.appendSignature(writer, tildeCounter);
-						fCurrentPosition += (tildeCounter - 1);
+						fCurrentPosition += tildeCounter - 1;
 						fWhiteStart = true;
 						fWhiteStartPosition = fCurrentPosition;
 					}
@@ -392,12 +390,12 @@ public class TemplateParser extends AbstractParser {
 
 			}
 			// -----------------end switch while try--------------------
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// end of scanner text
 		}
 		try {
 			appendContent(writer, fWhiteStart, fWhiteStartPosition, 1, true);
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// end of scanner text
 		}
 	}
@@ -414,7 +412,8 @@ public class TemplateParser extends AbstractParser {
 	 * @return
 	 * @throws IOException
 	 */
-	private boolean parseIncludeWikiTags(StringBuilder writer, boolean ignoreTemplateTags) throws IOException {
+	private boolean parseIncludeWikiTags(final StringBuilder writer, final boolean ignoreTemplateTags)
+			throws IOException {
 		try {
 			switch (fSource[fCurrentPosition]) {
 			case '!': // <!-- html comment -->
@@ -427,14 +426,14 @@ public class TemplateParser extends AbstractParser {
 					break;
 				}
 				// starting tag
-				int lessThanStart = fCurrentPosition - 1;
-				int startPosition = fCurrentPosition;
+				final int lessThanStart = fCurrentPosition - 1;
+				final int startPosition = fCurrentPosition;
 				int diff;
-				WikiTagNode tagNode = parseTag(fCurrentPosition);
+				final WikiTagNode tagNode = parseTag(fCurrentPosition);
 				if (tagNode != null && (!tagNode.isEmptyXmlTag() || "noinclude".equals(tagNode.getTagName()))) {
 					fCurrentPosition = tagNode.getEndPosition();
-					int tagStart = fCurrentPosition;
-					String tagName = tagNode.getTagName();
+					final int tagStart = fCurrentPosition;
+					final String tagName = tagNode.getTagName();
 
 					switch (tagName) {
 					case "nowiki":
@@ -500,7 +499,7 @@ public class TemplateParser extends AbstractParser {
 							fWhiteStartPosition = tagStart;
 
 							if (!fOnlyIncludeFlag) {
-								StringBuilder tempWriter = new StringBuilder();
+								final StringBuilder tempWriter = new StringBuilder();
 								if (fOnlyIncludeFlag = parsePreprocessRecursive(tempWriter, diff)) {
 									writer.delete(0, writer.length());
 								}
@@ -541,14 +540,14 @@ public class TemplateParser extends AbstractParser {
 					fCurrentPosition = startPosition;
 				}
 			} // switch
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// do nothing
 		}
 		return false;
 	}
 
-	private boolean parseSpecialWikiTags(Appendable writer) throws IOException {
-		int startPosition = fCurrentPosition;
+	private boolean parseSpecialWikiTags(final Appendable writer) throws IOException {
+		final int startPosition = fCurrentPosition;
 		try {
 			switch (fSource[fCurrentPosition]) {
 			case '!': // <!-- html comment -->
@@ -561,10 +560,10 @@ public class TemplateParser extends AbstractParser {
 				if (fSource[fCurrentPosition] != '/') {
 
 					// starting tag
-					WikiTagNode tagNode = parseTag(fCurrentPosition);
+					final WikiTagNode tagNode = parseTag(fCurrentPosition);
 					if (tagNode != null && !tagNode.isEmptyXmlTag()) {
 						fCurrentPosition = tagNode.getEndPosition();
-						String tagName = tagNode.getTagName();
+						final String tagName = tagNode.getTagName();
 						switch (tagName) {
 						case "nowiki":
 							readUntilIgnoreCase("</", "nowiki>");
@@ -586,19 +585,19 @@ public class TemplateParser extends AbstractParser {
 					}
 				}
 			}
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// do nothing
 		}
 		fCurrentPosition = startPosition;
 		return false;
 	}
 
-	private void appendContent(Appendable writer, boolean whiteStart, final int whiteStartPosition, final int diff,
-			boolean stripHTMLComments) throws IOException {
+	private void appendContent(final Appendable writer, final boolean whiteStart, final int whiteStartPosition,
+			final int diff, final boolean stripHTMLComments) throws IOException {
 		if (whiteStart) {
 			try {
 				final int whiteEndPosition = fCurrentPosition - diff;
-				int count = whiteEndPosition - whiteStartPosition;
+				final int count = whiteEndPosition - whiteStartPosition;
 				if (count > 0) {
 					if (stripHTMLComments) {
 						writer.append(HTML_COMMENT_PATTERN
@@ -613,7 +612,7 @@ public class TemplateParser extends AbstractParser {
 		}
 	}
 
-	private void appendContentWithComment(Appendable writer, int startPosition) throws IOException {
+	private void appendContentWithComment(final Appendable writer, final int startPosition) throws IOException {
 		if (fWhiteStartPosition < startPosition - 1) {
 			appendContent(writer, fWhiteStart, fWhiteStartPosition, fCurrentPosition - startPosition + 1, true);
 		}
@@ -622,14 +621,14 @@ public class TemplateParser extends AbstractParser {
 		fWhiteStartPosition = fCurrentPosition;
 	}
 
-	private boolean parseSubstOrSafesubst(Appendable writer) throws IOException {
+	private boolean parseSubstOrSafesubst(final Appendable writer) throws IOException {
 		appendContent(writer, fWhiteStart, fWhiteStartPosition, 1, true);
-		int pos = fCurrentPosition;
+		final int pos = fCurrentPosition;
 
 		consumeWhitespace();
-		int startTemplatePosition = ++fCurrentPosition;
+		final int startTemplatePosition = ++fCurrentPosition;
 
-		int templateEndPosition = findNestedTemplateEnd(fSource, fCurrentPosition);
+		final int templateEndPosition = findNestedTemplateEnd(fSource, fCurrentPosition);
 		if (templateEndPosition < 0) {
 			fCurrentPosition = pos;
 			return false;
@@ -638,13 +637,13 @@ public class TemplateParser extends AbstractParser {
 		}
 	}
 
-	private boolean parseTemplateOrTemplateParameter(Appendable writer) throws IOException {
+	private boolean parseTemplateOrTemplateParameter(final Appendable writer) throws IOException {
 		if (fSource[fCurrentPosition] == '{') {
 			appendContent(writer, fWhiteStart, fWhiteStartPosition, 1, true);
-			int startTemplatePosition = ++fCurrentPosition;
+			final int startTemplatePosition = ++fCurrentPosition;
 			if (fSource[fCurrentPosition] == '{' && fSource[fCurrentPosition + 1] != '{') {
 				// parse template parameters
-				int[] templateEndPosition = findNestedParamEnd(fSource, fCurrentPosition + 1);
+				final int[] templateEndPosition = findNestedParamEnd(fSource, fCurrentPosition + 1);
 				if (templateEndPosition[0] < 0) {
 					if (templateEndPosition[1] < 0) {
 						--fCurrentPosition;
@@ -658,7 +657,7 @@ public class TemplateParser extends AbstractParser {
 					return true;
 				}
 			} else {
-				int templateEndPosition = findNestedTemplateEnd(fSource, fCurrentPosition);
+				final int templateEndPosition = findNestedTemplateEnd(fSource, fCurrentPosition);
 				if (templateEndPosition < 0) {
 					fCurrentPosition--;
 				} else {
@@ -669,18 +668,18 @@ public class TemplateParser extends AbstractParser {
 		return false;
 	}
 
-	private boolean parseSubst(Appendable writer, int startTemplatePosition, int templateEndPosition)
+	private boolean parseSubst(final Appendable writer, final int startTemplatePosition, final int templateEndPosition)
 			throws IOException {
 		fCurrentPosition = templateEndPosition;
 		// insert template handling
-		int endPosition = fCurrentPosition;
+		final int endPosition = fCurrentPosition;
 		String plainContent;
-		int endOffset = fCurrentPosition - 2;
-		Object[] objs = createParameterMap(fSource, startTemplatePosition,
+		final int endOffset = fCurrentPosition - 2;
+		final Object[] objs = createParameterMap(fSource, startTemplatePosition,
 				fCurrentPosition - startTemplatePosition - 2);
-		String templateName = ((String) objs[1]);
+		final String templateName = (String) objs[1];
 		@SuppressWarnings("unchecked")
-		List<String> parts = (List<String>) objs[0];
+		final List<String> parts = (List<String>) objs[0];
 		ITemplateFunction templateFunction;
 		int currOffset;
 		if (templateName.startsWith(SUBST)) {
@@ -722,28 +721,28 @@ public class TemplateParser extends AbstractParser {
 	 * @return
 	 * @throws IOException
 	 */
-	private boolean parseTemplate(Appendable writer, int startTemplatePosition, int templateEndPosition)
-			throws IOException {
+	private boolean parseTemplate(final Appendable writer, final int startTemplatePosition,
+			final int templateEndPosition) throws IOException {
 		fCurrentPosition = templateEndPosition;
 
-		int endPosition = fCurrentPosition;
+		final int endPosition = fCurrentPosition;
 		String plainContent;
-		int endOffset = fCurrentPosition - 2;
-		Object[] objs = createParameterMap(fSource, startTemplatePosition,
+		final int endOffset = fCurrentPosition - 2;
+		final Object[] objs = createParameterMap(fSource, startTemplatePosition,
 				fCurrentPosition - startTemplatePosition - 2);
 		@SuppressWarnings("unchecked")
-		List<String> parts = (List<String>) objs[0];
-		String templateName = ((String) objs[1]);
-		StringBuilder buf = new StringBuilder((templateName.length()) + (templateName.length() / 10));
+		final List<String> parts = (List<String>) objs[0];
+		String templateName = (String) objs[1];
+		final StringBuilder buf = new StringBuilder(templateName.length() + templateName.length() / 10);
 		TemplateParser.parse(templateName, fWikiModel, buf, false);
 		templateName = buf.toString();
-		int currOffset = TemplateParser.checkParserFunction(buf);
+		final int currOffset = TemplateParser.checkParserFunction(buf);
 		if (currOffset > 0) {
-			String function = templateName.substring(0, currOffset - 1).trim();
+			final String function = templateName.substring(0, currOffset - 1).trim();
 			if (Configuration.PARSER_FUNCTIONS) {
 				System.out.println(function);
 			}
-			ITemplateFunction templateFunction = fWikiModel.getTemplateFunction(function);
+			final ITemplateFunction templateFunction = fWikiModel.getTemplateFunction(function);
 			if (templateFunction != null) {
 				// if (function.charAt(0) == '#') {
 				// #if:, #ifeq:,...
@@ -765,9 +764,9 @@ public class TemplateParser extends AbstractParser {
 			return false;
 		}
 		fCurrentPosition = endPosition;
-		LinkedHashMap<String, String> parameterMap = new LinkedHashMap<>();
+		final LinkedHashMap<String, String> parameterMap = new LinkedHashMap<>();
 		if (parts.size() > 1) {
-			List<String> unnamedParameters = new ArrayList<>();
+			final List<String> unnamedParameters = new ArrayList<>();
 			for (int i = 1; i < parts.size(); i++) {
 				createSingleParameter(parts.get(i), fWikiModel, parameterMap, unnamedParameters);
 			}
@@ -786,32 +785,34 @@ public class TemplateParser extends AbstractParser {
 	 * See <a href="https://meta.wikimedia.org/wiki/Help:Template#Mix_of_named_and_unnamed_parameters"
 	 * >Help:Template#Mix_of_named_and_unnamed_parameters</a>
 	 */
-	public static void mergeParameters(LinkedHashMap<String, String> parameterMap, List<String> unnamedParameters) {
+	public static void mergeParameters(final LinkedHashMap<String, String> parameterMap,
+			final List<String> unnamedParameters) {
 		if (unnamedParameters.size() == 0) {
 			return;
 		}
 		int unnamedParameterIndex = 1;
-		for (String param : unnamedParameters) {
-			String key = Integer.toString(unnamedParameterIndex++);
-			if (!parameterMap.containsKey(key))
+		for (final String param : unnamedParameters) {
+			final String key = Integer.toString(unnamedParameterIndex++);
+			if (!parameterMap.containsKey(key)) {
 				parameterMap.put(key, param);
+			}
 		}
 	}
 
 	/**
 	 * Parse a single template parameter {{{...}}}
-	 * 
+	 *
 	 * @throws IOException
 	 */
-	private void parseTemplateParameter(Appendable writer, int startTemplatePosition, int templateEndPosition)
-			throws IOException {
-		String plainContent = fStringSource.substring(startTemplatePosition - 2, templateEndPosition);
+	private void parseTemplateParameter(final Appendable writer, final int startTemplatePosition,
+			final int templateEndPosition) throws IOException {
+		final String plainContent = fStringSource.substring(startTemplatePosition - 2, templateEndPosition);
 		fCurrentPosition = templateEndPosition;
-		int indx = plainContent.indexOf("{{{");
+		final int indx = plainContent.indexOf("{{{");
 		if (indx >= 0) {
-			TemplateParser scanner = new TemplateParser(plainContent);
+			final TemplateParser scanner = new TemplateParser(plainContent);
 			scanner.setModel(fWikiModel);
-			StringBuilder plainBuffer = scanner.replaceTemplateParameters(null, 0);
+			final StringBuilder plainBuffer = scanner.replaceTemplateParameters(null, 0);
 			if (plainBuffer == null) {
 				writer.append(plainContent);
 				return;
@@ -826,11 +827,11 @@ public class TemplateParser extends AbstractParser {
 	 * @return the templates parameters <code>java.util.List</code> at index [0] and the template name at index [1]
 	 *
 	 */
-	public static Object[] createParameterMap(char[] src, int startOffset, int len) {
-		Object[] objs = new Object[2];
-		int currOffset = startOffset;
-		int endOffset = startOffset + len;
-		List<String> resultList = new ArrayList<>();
+	public static Object[] createParameterMap(final char[] src, final int startOffset, final int len) {
+		final Object[] objs = new Object[2];
+		final int currOffset = startOffset;
+		final int endOffset = startOffset + len;
+		final List<String> resultList = new ArrayList<>();
 		objs[0] = resultList;
 		splitByPipe(src, currOffset, endOffset, resultList);
 		if (resultList.size() <= 1) {
@@ -844,31 +845,32 @@ public class TemplateParser extends AbstractParser {
 
 	/**
 	 * Create a {@link TemplateTag} from the passed template call.
-	 * 
+	 *
 	 * @return the template tag
 	 */
-	public static TemplateTag createTemplateTag(char[] src, int startOffset, int len, IWikiModel model) {
+	public static TemplateTag createTemplateTag(final char[] src, final int startOffset, final int len,
+			final IWikiModel model) {
 		// Parse parameters
-		Object[] objs = TemplateParser.createParameterMap(src, startOffset, len);
-		String templateName = (String) objs[1];
-		Map<String, String> parameterMap = createParameterMap(objs, model);
+		final Object[] objs = TemplateParser.createParameterMap(src, startOffset, len);
+		final String templateName = (String) objs[1];
+		final Map<String, String> parameterMap = createParameterMap(objs, model);
 
 		// Create the tag
-		TemplateTag tag = new TemplateTag(templateName);
-		for (Map.Entry<String, String> entry : parameterMap.entrySet()) {
+		final TemplateTag tag = new TemplateTag(templateName);
+		for (final Map.Entry<String, String> entry : parameterMap.entrySet()) {
 			tag.addAttribute(entry.getKey(), entry.getValue(), false);
 		}
 
 		return tag;
 	}
 
-	public static Map<String, String> createParameterMap(Object[] objs, IWikiModel model) {
+	public static Map<String, String> createParameterMap(final Object[] objs, final IWikiModel model) {
 		@SuppressWarnings("unchecked")
-		List<String> parts = (List<String>) objs[0];
+		final List<String> parts = (List<String>) objs[0];
 
-		LinkedHashMap<String, String> parameterMap = new LinkedHashMap<>();
+		final LinkedHashMap<String, String> parameterMap = new LinkedHashMap<>();
 		if (parts.size() > 1) {
-			List<String> unnamedParameters = new ArrayList<>();
+			final List<String> unnamedParameters = new ArrayList<>();
 			for (int i = 1; i < parts.size(); ++i) {
 				createSingleParameter(parts.get(i), model, parameterMap, unnamedParameters);
 			}
@@ -896,11 +898,11 @@ public class TemplateParser extends AbstractParser {
 	 * @param unnamedParams
 	 *            a list of unnamed parameter values
 	 */
-	public static void createSingleParameter(String srcString, IWikiModel wikiModel,
-			Map<String, String> namedParameterMap, List<String> unnamedParams) {
+	public static void createSingleParameter(final String srcString, final IWikiModel wikiModel,
+			final Map<String, String> namedParameterMap, final List<String> unnamedParams) {
 		int currOffset = 0;
-		char[] src = srcString.toCharArray();
-		int endOffset = srcString.length();
+		final char[] src = srcString.toCharArray();
+		final int endOffset = srcString.length();
 		char ch;
 		String parameter = null;
 		String value;
@@ -945,31 +947,31 @@ public class TemplateParser extends AbstractParser {
 				}
 			}
 
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 
 		} finally {
 			if (currOffset >= lastOffset) {
 				try {
 					value = srcString.substring(lastOffset, currOffset);
-					boolean parameterParsingMode = wikiModel.isParameterParsingMode();
+					final boolean parameterParsingMode = wikiModel.isParameterParsingMode();
 					try {
 						wikiModel.setParameterParsingMode(true);
 						if (parameter != null) {
-							StringBuilder buf = new StringBuilder(value.length());
+							final StringBuilder buf = new StringBuilder(value.length());
 							TemplateParser.parseRecursive(value, wikiModel, buf, false, false);
 							value = Util.trimNewlineRight(buf.toString());
 							namedParameterMap.put(parameter, value);
 						} else {
 							// whitespace characters are not automatically stripped from the
 							// start and end of unnamed parameters!
-							StringBuilder buf = new StringBuilder(value.length());
+							final StringBuilder buf = new StringBuilder(value.length());
 							TemplateParser.parseRecursive(value, wikiModel, buf, false, false);
 							unnamedParams.add(buf.toString());
 						}
 					} finally {
 						wikiModel.setParameterParsingMode(parameterParsingMode);
 					}
-				} catch (IOException ignored) {
+				} catch (final IOException ignored) {
 				}
 			}
 		}
@@ -984,9 +986,9 @@ public class TemplateParser extends AbstractParser {
 	 * @return the offset behind the &acute;:&acute; character at the end of the parser function name or <code>-1</code>
 	 *         if no parser function can be found in this template.
 	 */
-	public static int checkParserFunction(CharSequence plainContent) {
+	public static int checkParserFunction(final CharSequence plainContent) {
 		int currOffset = 0;
-		int len = plainContent.length();
+		final int len = plainContent.length();
 		char ch;
 		while (currOffset < len) {
 			ch = plainContent.charAt(currOffset++);
@@ -1007,7 +1009,7 @@ public class TemplateParser extends AbstractParser {
 		return -1;
 	}
 
-	protected boolean parseHTMLCommentTags(Appendable writer) throws IOException {
+	protected boolean parseHTMLCommentTags(final Appendable writer) throws IOException {
 		if (fStringSource.startsWith("<!--", fCurrentPosition - 1)) {
 			int temp = readWhitespaceUntilStartOfLine(2);
 			if (!fOnlyIncludeFlag) {
@@ -1044,12 +1046,12 @@ public class TemplateParser extends AbstractParser {
 	 * @return <code>null</code> if no replacement could be found
 	 */
 	@Nullable
-	public StringBuilder replaceTemplateParameters(@Nullable Map<String, String> templateParameters,
-			int curlyBraceOffset) {
+	public StringBuilder replaceTemplateParameters(@Nullable final Map<String, String> templateParameters,
+			final int curlyBraceOffset) {
 		StringBuilder buffer = null;
 		int bufferStart = 0;
 		try {
-			int level = fWikiModel.incrementRecursionLevel();
+			final int level = fWikiModel.incrementRecursionLevel();
 			if (level > Configuration.PARSER_RECURSION_LIMIT) {
 				return null; // no further processing
 			}
@@ -1065,14 +1067,14 @@ public class TemplateParser extends AbstractParser {
 					fScannerPosition += 2;
 					parameterStart = fScannerPosition;
 
-					int temp[] = findNestedParamEnd(fSource, parameterStart);
+					final int temp[] = findNestedParamEnd(fSource, parameterStart);
 					if (temp[0] >= 0) {
 						fScannerPosition = temp[0];
-						List<String> list = splitByPipe(fSource, parameterStart, fScannerPosition - 3, null);
+						final List<String> list = splitByPipe(fSource, parameterStart, fScannerPosition - 3, null);
 						if (list.size() > 0) {
 							String parameterString = list.get(0).trim();
 
-							TemplateParser scanner1 = new TemplateParser(parameterString);
+							final TemplateParser scanner1 = new TemplateParser(parameterString);
 							scanner1.setModel(fWikiModel);
 							recursiveResult = scanner1.replaceTemplateParameters(templateParameters, curlyBraceOffset);
 							if (recursiveResult != null) {
@@ -1098,7 +1100,7 @@ public class TemplateParser extends AbstractParser {
 										buffer.append(fSource, bufferStart, parameterStart - bufferStart - 3);
 									}
 
-									TemplateParser scanner2 = new TemplateParser(value);
+									final TemplateParser scanner2 = new TemplateParser(value);
 									scanner2.setModel(fWikiModel);
 									if (isDefaultValue) {
 										recursiveResult = scanner2.replaceTemplateParameters(templateParameters,
@@ -1125,7 +1127,7 @@ public class TemplateParser extends AbstractParser {
 					return buffer;
 				}
 			}
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// ignore
 		} finally {
 			fWikiModel.decrementRecursionLevel();

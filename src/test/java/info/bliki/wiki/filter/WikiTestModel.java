@@ -1,5 +1,13 @@
 package info.bliki.wiki.filter;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+
 import info.bliki.htmlcleaner.ContentToken;
 import info.bliki.htmlcleaner.TagNode;
 import info.bliki.htmlcleaner.Utils;
@@ -8,17 +16,12 @@ import info.bliki.wiki.model.WikiModel;
 import info.bliki.wiki.model.WikiModelContentException;
 import info.bliki.wiki.tags.IgnoreTag;
 import info.bliki.wiki.tags.extension.ChartTag;
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Wiki model implementation which allows some special JUnit tests with namespaces and predefined templates
  */
+@Slf4j
 public class WikiTestModel extends WikiModel {
 	private static final String MAIN_FOO = "BAR";
 	private static final String FOODATE = "FOODATE";
@@ -31,7 +34,7 @@ public class WikiTestModel extends WikiModel {
 	}
 
 	private static Configuration getTestConfiguration() {
-		Configuration configuration = new Configuration();
+		final Configuration configuration = new Configuration();
 		configuration.addUriScheme("tel");
 		configuration.addInterwikiLink("intra", "/$1");
 		configuration.addTokenTag("chart", new ChartTag());
@@ -41,19 +44,21 @@ public class WikiTestModel extends WikiModel {
 		return configuration;
 	}
 
-	public WikiTestModel(Locale locale, String imageBaseURL, String linkBaseURL, String resourceBase) {
+	public WikiTestModel(final Locale locale, final String imageBaseURL, final String linkBaseURL,
+			final String resourceBase) {
 		super(getTestConfiguration(), locale, imageBaseURL, linkBaseURL);
-		this.semanticWebActive = false;
+		semanticWebActive = false;
 		this.resourceBase = resourceBase;
 		fNamespace.getImage().addAlias("Bild");
 	}
 
 	@Override
-	public String getRawWikiContent(ParsedPageName page, Map<String, String> map) throws WikiModelContentException {
+	public String getRawWikiContent(final ParsedPageName page, final Map<String, String> map)
+			throws WikiModelContentException {
 		if (debug) {
-			logger.error("getRawWikiContent(" + page + ")");
+			log.error("getRawWikiContent(" + page + ")");
 		}
-		String result = super.getRawWikiContent(page, map);
+		final String result = super.getRawWikiContent(page, map);
 		if (result != null) {
 			return result;
 		}
@@ -87,21 +92,22 @@ public class WikiTestModel extends WikiModel {
 	}
 
 	@Override
-	public void setSemanticWebActive(boolean semanticWeb) {
-		this.semanticWebActive = semanticWeb;
+	public void setSemanticWebActive(final boolean semanticWeb) {
+		semanticWebActive = semanticWeb;
 	}
 
 	@Override
-	public boolean showSyntax(String tagName) {
+	public boolean showSyntax(final String tagName) {
 		return true;
 	}
 
 	@Override
-	public void appendExternalLink(String uriSchemeName, String link, String linkName, boolean withoutSquareBrackets) {
+	public void appendExternalLink(final String uriSchemeName, String link, final String linkName,
+			final boolean withoutSquareBrackets) {
 		if (uriSchemeName.equalsIgnoreCase("tel")) {
 			// example for a telephone link
 			link = Utils.escapeXml(link, true, false, false);
-			TagNode aTagNode = new TagNode("a");
+			final TagNode aTagNode = new TagNode("a");
 			aTagNode.addAttribute("href", link, true);
 			aTagNode.addAttribute("class", "telephonelink", true);
 			aTagNode.addAttribute("title", link, true);
@@ -109,7 +115,7 @@ public class WikiTestModel extends WikiModel {
 				append(aTagNode);
 				aTagNode.addChild(new ContentToken(linkName));
 			} else {
-				String trimmedText = linkName.trim();
+				final String trimmedText = linkName.trim();
 				if (trimmedText.length() > 0) {
 					pushNode(aTagNode);
 					WikipediaParser.parseRecursive(trimmedText, this, false, true);
@@ -121,47 +127,47 @@ public class WikiTestModel extends WikiModel {
 		super.appendExternalLink(uriSchemeName, link, linkName, withoutSquareBrackets);
 	}
 
-	private String loadTemplateResource(String name) {
+	private String loadTemplateResource(final String name) {
 		return loadResource(resourceNameFromTemplateName(name));
 	}
 
-	private String loadModuleResource(String name) {
+	private String loadModuleResource(final String name) {
 		return loadResource(resourceNameFromModuleName(name));
 	}
 
-	private String loadResource(String name) {
+	private String loadResource(final String name) {
 		if (name == null) {
 			return null;
 		}
 		if (debug) {
-			logger.error("loading " + name);
+			log.error("loading " + name);
 		}
 		try (InputStream is = getClass().getResourceAsStream(name)) {
 			return is == null ? null : IOUtils.toString(is);
-		} catch (IOException e) {
-			logger.error("error loading " + name, e);
+		} catch (final IOException e) {
+			log.error("error loading " + name, e);
 			throw new RuntimeException(e);
 		}
 	}
 
-	private String resourceNameFromTemplateName(String name) {
+	private String resourceNameFromTemplateName(final String name) {
 		return getResource("templates", name, null);
 	}
 
-	private String resourceNameFromModuleName(String name) {
+	private String resourceNameFromModuleName(final String name) {
 		return getResource("modules", name, "lua");
 	}
 
-	private String getResource(String type, String name, String ext) {
+	private String getResource(final String type, final String name, final String ext) {
 		if (name.trim().length() == 0) {
 			return null;
 		} else {
 			return String.format("/%s/%s/%s%s", resourceBase, type, name.replaceAll("[ /]", "_"),
-					ext != null ? ("." + ext) : "");
+					ext != null ? "." + ext : "");
 		}
 	}
 
-	public void setDebug(boolean debug) {
+	public void setDebug(final boolean debug) {
 		this.debug = debug;
 	}
 }

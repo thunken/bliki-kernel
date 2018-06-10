@@ -1,8 +1,13 @@
 package info.bliki.wiki.filter;
 
+import static info.bliki.wiki.filter.ParsedPageName.parsePageName;
+
+import java.util.Map;
+
 import info.bliki.htmlcleaner.ContentToken;
 import info.bliki.htmlcleaner.TagNode;
 import info.bliki.htmlcleaner.TagToken;
+import info.bliki.util.Throwables;
 import info.bliki.wiki.model.Configuration;
 import info.bliki.wiki.model.IWikiModel;
 import info.bliki.wiki.model.WikiModelContentException;
@@ -11,12 +16,11 @@ import info.bliki.wiki.tags.HTMLTag;
 import info.bliki.wiki.tags.WPBoldItalicTag;
 import info.bliki.wiki.tags.WPTag;
 import info.bliki.wiki.tags.util.TagStack;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-
-import static info.bliki.wiki.filter.ParsedPageName.parsePageName;
-
+@Slf4j
 public abstract class AbstractWikipediaParser extends AbstractParser {
+
 	protected static final int TokenIgnore = -1;
 	protected static final int TokenSTART = 0;
 	protected static final int TokenEOF = 1;
@@ -28,7 +32,7 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 	protected static final HTMLTag ITALIC = new WPTag("i");
 	protected static final HTMLTag BOLDITALIC = new WPBoldItalicTag();
 
-	public AbstractWikipediaParser(String stringSource) {
+	public AbstractWikipediaParser(final String stringSource) {
 		super(stringSource);
 	}
 
@@ -36,17 +40,17 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 
 	protected abstract void setNoToC(boolean noToC);
 
-	public static String getRedirectedRawContent(IWikiModel wikiModel, ParsedPageName parsedPagename,
-			Map<String, String> templateParameters) {
+	public static String getRedirectedRawContent(final IWikiModel wikiModel, final ParsedPageName parsedPagename,
+			final Map<String, String> templateParameters) {
 		try {
-			int level = wikiModel.incrementRecursionLevel();
+			final int level = wikiModel.incrementRecursionLevel();
 			if (level > Configuration.PARSER_RECURSION_LIMIT || !parsedPagename.valid) {
 				return "<span class=\"error\">Error - getting content of redirected link: " + parsedPagename.namespace
 						+ ":" + parsedPagename.pagename + "<span>";
 			}
 			try {
 				return wikiModel.getRawWikiContent(parsedPagename, templateParameters);
-			} catch (WikiModelContentException e) {
+			} catch (final WikiModelContentException e) {
 				return "<span class=\"error\">Error - getting content of redirected link: " + parsedPagename.namespace
 						+ ":" + parsedPagename.pagename + "<span>";
 			}
@@ -55,10 +59,11 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 		}
 	}
 
-	protected static String getRedirectedTemplateContent(IWikiModel wikiModel, String redirectedLink,
-			Map<String, String> templateParameters) {
+	protected static String getRedirectedTemplateContent(final IWikiModel wikiModel, final String redirectedLink,
+			final Map<String, String> templateParameters) {
 		final INamespace namespace = wikiModel.getNamespace();
-		ParsedPageName parsedPagename = parsePageName(wikiModel, redirectedLink, namespace.getMain(), false, false);
+		final ParsedPageName parsedPagename = parsePageName(wikiModel, redirectedLink, namespace.getMain(), false,
+				false);
 		// note: don't just get redirect content if the namespace is the template namespace!
 		if (!parsedPagename.valid) {
 			return null;
@@ -94,7 +99,7 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 
 	protected boolean parseHTMLCommentTags() {
 		if (fStringSource.startsWith("<!--", fCurrentPosition - 1)) {
-			int htmlStartPosition = fCurrentPosition;
+			final int htmlStartPosition = fCurrentPosition;
 			fCurrentPosition += 3;
 			readUntil("-->");
 			createContentToken(fCurrentPosition - htmlStartPosition + 1);
@@ -106,7 +111,7 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 	protected void reduceTokenStackBoldItalic() {
 		boolean found = false;
 		while (fWikiModel.stackSize() > 0) {
-			TagToken token = fWikiModel.peekNode();//
+			final TagToken token = fWikiModel.peekNode();//
 			if (token.equals(BOLD) || token.equals(ITALIC) || token.equals(BOLDITALIC)) {
 				if (fWhiteStart) {
 					found = true;
@@ -127,10 +132,10 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 	 * Reduce the current token stack until the given nodes name is at the top of the stack. Useful for closing HTML
 	 * tags.
 	 */
-	protected void reduceStackUntilToken(TagToken node) {
+	protected void reduceStackUntilToken(final TagToken node) {
 		TagToken tag;
 		int index = -1;
-		String allowedParents = node.getParents();
+		final String allowedParents = node.getParents();
 		while (fWikiModel.stackSize() > 0) {
 			tag = fWikiModel.peekNode();
 			if (node.getName().equals(tag.getName())) {
@@ -150,15 +155,16 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 		}
 	}
 
-	protected TagStack parseRecursiveInternal(IWikiModel wikiModel, boolean createOnlyLocalStack, boolean noTOC) {
+	protected TagStack parseRecursiveInternal(final IWikiModel wikiModel, final boolean createOnlyLocalStack,
+			final boolean noTOC) {
 		// local stack for this wiki snippet
-		TagStack localStack = new TagStack();
+		final TagStack localStack = new TagStack();
 		// global wiki model stack
-		TagStack globalWikiModelStack = wikiModel.swapStack(localStack);
+		final TagStack globalWikiModelStack = wikiModel.swapStack(localStack);
 		try {
 			// fix for infinite recursion
 
-			int level = wikiModel.incrementRecursionLevel();
+			final int level = wikiModel.incrementRecursionLevel();
 			// int parserRecursionLevel = wikiModel.incrementParserRecursionLevel();
 			// if (parserRecursionLevel > Configuration.PARSER_RECURSION_LIMIT) {
 			// TagNode error = new TagNode("span");
@@ -170,7 +176,7 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 			// }
 
 			if (level > Configuration.PARSER_RECURSION_LIMIT) {
-				TagNode error = new TagNode("span");
+				final TagNode error = new TagNode("span");
 				error.addAttribute("class", "error", true);
 				error.addChild(new ContentToken("Error - recursion limit exceeded parsing wiki tags."));
 				localStack.append(error);
@@ -183,8 +189,8 @@ public abstract class AbstractWikipediaParser extends AbstractParser {
 			runParser();
 			return localStack;
 		} catch (Exception | Error e) {
-			e.printStackTrace();
-			TagNode error = new TagNode("span");
+			Throwables.log(log, e);
+			final TagNode error = new TagNode("span");
 			error.addAttribute("class", "error", true);
 			error.addChild(new ContentToken(e.getClass().getSimpleName()));
 			localStack.append(error);

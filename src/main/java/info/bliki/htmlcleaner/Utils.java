@@ -37,6 +37,8 @@
 
 package info.bliki.htmlcleaner;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,7 +47,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Map;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import info.bliki.util.Throwables;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>
@@ -55,7 +58,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Created by: Vladimir Nikic<br/>
  * Date: November, 2006.
  */
+@Slf4j
 public class Utils {
+
 	public static String VAR_START = "${";
 	public static String VAR_END = "}";
 
@@ -64,13 +69,13 @@ public class Utils {
 	 *
 	 * @param s
 	 */
-	public static String ltrim(String s) {
+	public static String ltrim(final String s) {
 		if (s == null) {
 			return null;
 		}
 
 		int index = 0;
-		int len = s.length();
+		final int len = s.length();
 
 		while (index < len && Character.isWhitespace(s.charAt(index))) {
 			index++;
@@ -79,7 +84,7 @@ public class Utils {
 		if (index == 0) {
 			return s;
 		}
-		return (index >= len) ? "" : s.substring(index);
+		return index >= len ? "" : s.substring(index);
 	}
 
 	/**
@@ -87,12 +92,12 @@ public class Utils {
 	 *
 	 * @param s
 	 */
-	public static String rtrim(String s) {
+	public static String rtrim(final String s) {
 		if (s == null) {
 			return null;
 		}
 
-		int len = s.length();
+		final int len = s.length();
 		int index = len;
 
 		while (index > 0 && Character.isWhitespace(s.charAt(index - 1))) {
@@ -102,7 +107,7 @@ public class Utils {
 		if (index == len) {
 			return s;
 		}
-		return (index <= 0) ? "" : s.substring(0, index);
+		return index <= 0 ? "" : s.substring(0, index);
 	}
 
 	/**
@@ -110,13 +115,13 @@ public class Utils {
 	 *
 	 * @param s
 	 */
-	public static String ltrimNewline(String s) {
+	public static String ltrimNewline(final String s) {
 		if (s == null) {
 			return null;
 		}
 
 		int index = 0;
-		int len = s.length();
+		final int len = s.length();
 
 		while (index < len && Character.isWhitespace(s.charAt(index))) {
 			if (s.charAt(index) == '\n') {
@@ -127,7 +132,7 @@ public class Utils {
 		if (index == 0) {
 			return s;
 		}
-		return (index >= len) ? "" : s.substring(index);
+		return index >= len ? "" : s.substring(index);
 	}
 
 	/**
@@ -135,12 +140,12 @@ public class Utils {
 	 *
 	 * @param s
 	 */
-	public static String trimNewlineLeft(String s) {
+	public static String trimNewlineLeft(final String s) {
 		if (s == null) {
 			return null;
 		}
 		int leftIndex = 0;
-		int len = s.length();
+		final int len = s.length();
 		int lastIndex = -1;
 
 		while (leftIndex < len && Character.isWhitespace(s.charAt(leftIndex))) {
@@ -163,7 +168,7 @@ public class Utils {
 		if (rightIndex <= 0) {
 			return "";
 		}
-		if ((leftIndex == 0) && rightIndex == len) {
+		if (leftIndex == 0 && rightIndex == len) {
 			return s;
 		}
 		return s.substring(leftIndex, rightIndex);
@@ -175,12 +180,12 @@ public class Utils {
 	 *
 	 * @param s
 	 */
-	public static String trimNewlineRight(String s) {
+	public static String trimNewlineRight(final String s) {
 		if (s == null) {
 			return null;
 		}
 		int leftIndex = 0;
-		int len = s.length();
+		final int len = s.length();
 
 		while (leftIndex < len && Character.isWhitespace(s.charAt(leftIndex))) {
 			leftIndex++;
@@ -203,7 +208,7 @@ public class Utils {
 		if (rightIndex <= 0) {
 			return "";
 		}
-		if ((leftIndex == 0) && rightIndex == len) {
+		if (leftIndex == 0 && rightIndex == len) {
 			return s;
 		}
 		return s.substring(leftIndex, rightIndex);
@@ -217,13 +222,13 @@ public class Utils {
 	 * @param charset
 	 * @throws IOException
 	 */
-	public static StringBuffer readUrl(URL url, String charset) throws IOException {
-		StringBuffer buffer = new StringBuffer(1024);
+	public static StringBuffer readUrl(final URL url, final String charset) throws IOException {
+		final StringBuffer buffer = new StringBuffer(1024);
 
-		Object content = url.getContent();
+		final Object content = url.getContent();
 		if (content instanceof InputStream) {
-			InputStreamReader reader = new InputStreamReader((InputStream) content, charset);
-			char[] charArray = new char[1024];
+			final InputStreamReader reader = new InputStreamReader((InputStream) content, charset);
+			final char[] charArray = new char[1024];
 			try {
 				int charsRead = 0;
 				do {
@@ -240,7 +245,7 @@ public class Utils {
 		return buffer;
 	}
 
-	public static boolean isHexadecimalDigit(char ch) {
+	public static boolean isHexadecimalDigit(final char ch) {
 		return Character.isDigit(ch) || ch == 'A' || ch == 'a' || ch == 'B' || ch == 'b' || ch == 'C' || ch == 'c'
 				|| ch == 'D' || ch == 'd' || ch == 'E' || ch == 'e' || ch == 'F' || ch == 'f';
 	}
@@ -248,15 +253,15 @@ public class Utils {
 	/**
 	 * Escapes XML string.
 	 */
-	public static String escapeXml(String s, boolean advanced, boolean recognizeUnicodeChars,
-			boolean translateSpecialEntities) {
+	public static String escapeXml(final String s, final boolean advanced, final boolean recognizeUnicodeChars,
+			final boolean translateSpecialEntities) {
 		if (s != null && s.length() != 0) {
-			int len = s.length();
-			StringBuilder result = new StringBuilder(len + len / 10);
+			final int len = s.length();
+			final StringBuilder result = new StringBuilder(len + len / 10);
 
 			try {
 				escapeXmlToBuffer(s, result, advanced, recognizeUnicodeChars, translateSpecialEntities);
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				return "Error in escapeXml: IOException";
 			}
 
@@ -269,23 +274,24 @@ public class Utils {
 	/**
 	 * Escapes XML string into the given result buffer.
 	 */
-	public static void escapeXmlToBuffer(String s, Appendable result, boolean advanced, boolean recognizeUnicodeChars,
-			boolean translateSpecialEntities) throws IOException {
+	public static void escapeXmlToBuffer(final String s, final Appendable result, final boolean advanced,
+			final boolean recognizeUnicodeChars, final boolean translateSpecialEntities) throws IOException {
 		escapeXmlToBuffer(s, result, advanced, recognizeUnicodeChars, translateSpecialEntities, false);
 	}
 
 	/**
 	 * Escapes XML string into the given result buffer.
 	 */
-	public static void escapeXmlToBuffer(String s, Appendable result, boolean advanced, boolean recognizeUnicodeChars,
-			boolean translateSpecialEntities, boolean plainText) throws IOException {
+	public static void escapeXmlToBuffer(final String s, final Appendable result, final boolean advanced,
+			final boolean recognizeUnicodeChars, final boolean translateSpecialEntities, final boolean plainText)
+			throws IOException {
 		if (s != null) {
-			int len = s.length();
+			final int len = s.length();
 			for (int i = 0; i < len; i++) {
-				char ch = s.charAt(i);
+				final char ch = s.charAt(i);
 
 				if (ch == '&') {
-					if (recognizeUnicodeChars && (i < len - 1) && (s.charAt(i + 1) == '#')) {
+					if (recognizeUnicodeChars && i < len - 1 && s.charAt(i + 1) == '#') {
 						int charIndex = i + 2;
 						String unicode = "";
 						while (charIndex < len && (isHexadecimalDigit(s.charAt(charIndex)) || s.charAt(charIndex) == 'x'
@@ -295,11 +301,11 @@ public class Utils {
 						}
 						if (charIndex == len || !"".equals(unicode)) {
 							try {
-								char unicodeChar = unicode.toLowerCase().startsWith("x")
+								final char unicodeChar = unicode.toLowerCase().startsWith("x")
 										? (char) Integer.parseInt(unicode.substring(1), 16)
 										: (char) Integer.parseInt(unicode);
 								if ("&<>\'\"".indexOf(unicodeChar) < 0) {
-									int replaceChunkSize = (charIndex < len && s.charAt(charIndex) == ';')
+									final int replaceChunkSize = charIndex < len && s.charAt(charIndex) == ';'
 											? unicode.length() + 1
 											: unicode.length();
 									result.append(String.valueOf(unicodeChar));
@@ -308,7 +314,7 @@ public class Utils {
 									i = charIndex;
 									result.append("&#" + unicode + ";");
 								}
-							} catch (NumberFormatException e) {
+							} catch (final NumberFormatException e) {
 								i = charIndex;
 								result.append("&amp;#" + unicode + ";");
 							}
@@ -318,15 +324,15 @@ public class Utils {
 					} else {
 						if (translateSpecialEntities) {
 							// get following sequence of most 10 characters
-							String seq = s.substring(i, i + Math.min(10, len - i));
-							int semiIndex = seq.indexOf(';');
+							final String seq = s.substring(i, i + Math.min(10, len - i));
+							final int semiIndex = seq.indexOf(';');
 							if (semiIndex > 0) {
-								String entity = seq.substring(1, semiIndex);
-								Integer code = (Integer) SpecialEntities.entities.get(entity);
+								final String entity = seq.substring(1, semiIndex);
+								final Integer code = SpecialEntities.entities.get(entity);
 								if (code != null) {
-									int entityLen = entity.length();
+									final int entityLen = entity.length();
 									if (recognizeUnicodeChars) {
-										char unicodeChar = (char) code.intValue();
+										final char unicodeChar = (char) code.intValue();
 										if ("&<>\'\"".indexOf(unicodeChar) < 0) {
 											result.append(String.valueOf(unicodeChar));
 											i += entityLen + 1;
@@ -344,7 +350,7 @@ public class Utils {
 						}
 
 						if (advanced) {
-							String sub = s.substring(i);
+							final String sub = s.substring(i);
 							if (sub.startsWith("&amp;")) {
 								// result.append("&amp;");
 								result.append("&#38;");
@@ -375,7 +381,7 @@ public class Utils {
 
 							continue;
 						} else if (plainText) {
-							String sub = s.substring(i);
+							final String sub = s.substring(i);
 							if (sub.startsWith("&amp;")) {
 								result.append("&");
 								i += 4;
@@ -444,13 +450,13 @@ public class Utils {
 		}
 	}
 
-	public static String escapeXmlChars(String s) {
+	public static String escapeXmlChars(final String s) {
 		if (s != null) {
-			int len = s.length();
-			StringBuilder result = new StringBuilder(len + len / 10);
+			final int len = s.length();
+			final StringBuilder result = new StringBuilder(len + len / 10);
 
 			for (int i = 0; i < len; i++) {
-				char ch = s.charAt(i);
+				final char ch = s.charAt(i);
 				if (ch == '\'') {
 					result.append("&apos;");
 				} else if (ch == '>') {
@@ -470,9 +476,9 @@ public class Utils {
 		return null;
 	}
 
-	public static void appendAmpersandEscapedAttribute(StringBuilder writer, String attributeName,
-			Map<String, String> tagAtttributes) {
-		String attributeValue = tagAtttributes.get(attributeName);
+	public static void appendAmpersandEscapedAttribute(final StringBuilder writer, final String attributeName,
+			final Map<String, String> tagAtttributes) {
+		final String attributeValue = tagAtttributes.get(attributeName);
 		if (attributeValue != null) {
 			if (writer.length() > 0) {
 				writer.append("&amp;");
@@ -481,15 +487,15 @@ public class Utils {
 			writer.append("=");
 			try {
 				writer.append(URLEncoder.encode(attributeValue, UTF_8.name()));
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+			} catch (final UnsupportedEncodingException e) {
+				Throwables.log(log, e);
 			}
 		}
 	}
 
-	public static void appendEscapedAttribute(Appendable writer, String attributeName,
-			Map<String, String> tagAtttributes) throws IOException {
-		String attributeValue = tagAtttributes.get(attributeName);
+	public static void appendEscapedAttribute(final Appendable writer, final String attributeName,
+			final Map<String, String> tagAtttributes) throws IOException {
+		final String attributeValue = tagAtttributes.get(attributeName);
 		if (attributeValue != null) {
 			Utils.escapeXmlToBuffer(attributeValue, writer, false, false, false);
 		}
@@ -506,12 +512,12 @@ public class Utils {
 	 *            Map of variables (can be null)
 	 * @return Evaluated string
 	 */
-	public static String evaluateTemplate(String template, Map<String, String> variables) {
+	public static String evaluateTemplate(final String template, final Map<String, String> variables) {
 		if (template == null) {
 			return template;
 		}
 
-		StringBuffer result = new StringBuffer();
+		final StringBuffer result = new StringBuffer();
 
 		int startIndex = template.indexOf(VAR_START);
 		int endIndex = -1;
@@ -521,8 +527,8 @@ public class Utils {
 			endIndex = template.indexOf(VAR_END, startIndex);
 
 			if (endIndex > startIndex) {
-				String varName = template.substring(startIndex + VAR_START.length(), endIndex);
-				Object resultObj = variables != null ? variables.get(varName.toLowerCase()) : "";
+				final String varName = template.substring(startIndex + VAR_START.length(), endIndex);
+				final Object resultObj = variables != null ? variables.get(varName.toLowerCase()) : "";
 				result.append(resultObj == null ? "" : resultObj.toString());
 			}
 

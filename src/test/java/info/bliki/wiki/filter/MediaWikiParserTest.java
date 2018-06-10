@@ -1,11 +1,7 @@
 package info.bliki.wiki.filter;
 
-import info.bliki.wiki.model.Configuration;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -20,11 +16,19 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assume.assumeTrue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+
+import info.bliki.util.Throwables;
+import info.bliki.wiki.model.Configuration;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import lombok.extern.slf4j.Slf4j;
 
 // TODO: make this work with junit4
 @Ignore
+@Slf4j
 public class MediaWikiParserTest {
 
 	private final static String testFileName = "parserTests.txt";
@@ -58,15 +62,16 @@ public class MediaWikiParserTest {
 			"|" + "[\\w-]+" + // Plain word
 			")" + ")*" + ")?", Pattern.COMMENTS);
 
-	public MediaWikiParserTest(String test, String input, String result, String options, String configs) {
+	public MediaWikiParserTest(final String test, final String input, final String result, final String options,
+			final String configs) {
 		this.input = input;
-		this.expectedResult = result;
+		expectedResult = result;
 		this.options = parseOptions(options);
-		this.config = parseConfig(configs);
+		config = parseConfig(configs);
 	}
 
-	private static MediaWikiTestModel newWikiTestModel(Locale locale) {
-		MediaWikiTestModel wikiModel = new MediaWikiTestModel(locale, "/wiki/${image}", "/wiki/${title}", db);
+	private static MediaWikiTestModel newWikiTestModel(final Locale locale) {
+		final MediaWikiTestModel wikiModel = new MediaWikiTestModel(locale, "/wiki/${image}", "/wiki/${title}", db);
 		wikiModel.setUp();
 		return wikiModel;
 	}
@@ -79,9 +84,9 @@ public class MediaWikiParserTest {
 	 *
 	 * @return a 2-element array with the two components - the first may be empty if no colon is found
 	 */
-	private static String[] splitAtColon(String fullTitle) {
-		int colonIndex = fullTitle.indexOf(':');
-		if (colonIndex != (-1)) {
+	private static String[] splitAtColon(final String fullTitle) {
+		final int colonIndex = fullTitle.indexOf(':');
+		if (colonIndex != -1) {
 			return new String[] { fullTitle.substring(0, colonIndex), fullTitle.substring(colonIndex + 1) };
 		}
 		return new String[] { "", fullTitle };
@@ -92,7 +97,7 @@ public class MediaWikiParserTest {
 		AVOID_PAGE_BREAK_IN_TABLE_before = Configuration.AVOID_PAGE_BREAK_IN_TABLE;
 		Configuration.AVOID_PAGE_BREAK_IN_TABLE = false;
 
-		String language = (String) options.get("language");
+		final String language = (String) options.get("language");
 		Locale locale = Locale.ENGLISH;
 		if (language != null) {
 			// only support languages for which we have a localised Messages file:
@@ -122,7 +127,7 @@ public class MediaWikiParserTest {
 		if (title == null) {
 			title = "Parser test";
 		}
-		String[] title0 = splitAtColon(title);
+		final String[] title0 = splitAtColon(title);
 		wikiModel.setNamespaceName(title0[0]);
 		wikiModel.setPageName(title0[1]);
 		// TODO: use (more) options/config
@@ -139,7 +144,7 @@ public class MediaWikiParserTest {
 		}
 		assumeTrue(config.isEmpty());
 
-		String title = (String) options.get("title");
+		final String title = (String) options.get("title");
 		if (title != null) {
 			options.remove("title");
 			wikiModel.setPageName(title);
@@ -147,7 +152,7 @@ public class MediaWikiParserTest {
 		assumeTrue(options.isEmpty());
 
 		String actualResult = wikiModel.render(input, true);
-		Matcher matcher = NEWLINE_BLOCK.matcher(actualResult);
+		final Matcher matcher = NEWLINE_BLOCK.matcher(actualResult);
 		if (matcher.matches()) {
 			actualResult = actualResult.substring(1);
 		}
@@ -155,7 +160,7 @@ public class MediaWikiParserTest {
 	}
 
 	public static Test suite() {
-		TestSuite suite = new TestSuite(MediaWikiParserTest.class.getName());
+		final TestSuite suite = new TestSuite(MediaWikiParserTest.class.getName());
 
 		FileInputStream is = null;
 		BufferedReader br = null;
@@ -173,7 +178,7 @@ public class MediaWikiParserTest {
 				int lineNrStartTest = 0;
 
 				String section = null;
-				Map<String, String> data = new HashMap<>();
+				final Map<String, String> data = new HashMap<>();
 
 				while ((line = br.readLine()) != null) {
 					++lineNr;
@@ -258,14 +263,14 @@ public class MediaWikiParserTest {
 						data.put(section, data.get(section) + line + "\n");
 					}
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (final IOException e) {
+				Throwables.log(log, e);
 			} finally {
 				if (br != null) {
 					try {
 						br.close();
-					} catch (IOException e) {
-						e.printStackTrace();
+					} catch (final IOException e) {
+						Throwables.log(log, e);
 					}
 				}
 			}
@@ -273,11 +278,11 @@ public class MediaWikiParserTest {
 		return suite;
 	}
 
-	private static Map<String, Object> parseConfig(String configs) {
-		HashMap<String, Object> result = new HashMap<>();
-		for (String config : configs.split("\n")) {
+	private static Map<String, Object> parseConfig(final String configs) {
+		final HashMap<String, Object> result = new HashMap<>();
+		for (final String config : configs.split("\n")) {
 			if (config.length() != 0) {
-				String[] entry = config.split("=", 2);
+				final String[] entry = config.split("=", 2);
 				if (entry[1].startsWith("'")) {
 					result.put(entry[0], entry[1].substring(1, entry[1].length() - 1));
 				} else if (entry[1].equalsIgnoreCase("true")) {
@@ -286,9 +291,9 @@ public class MediaWikiParserTest {
 					result.put(entry[0], false);
 				} else {
 					try {
-						int value = Integer.parseInt(entry[1]);
+						final int value = Integer.parseInt(entry[1]);
 						result.put(entry[0], value);
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						System.err.println("unknown data type in config: " + config);
 						result.put(entry[0], entry[1]);
 					}
@@ -298,19 +303,19 @@ public class MediaWikiParserTest {
 		return result;
 	}
 
-	private static Map<String, Object> parseOptions(String options) {
-		HashMap<String, Object> result = new HashMap<>();
-		Matcher matcher = OPTION.matcher(options);
+	private static Map<String, Object> parseOptions(final String options) {
+		final HashMap<String, Object> result = new HashMap<>();
+		final Matcher matcher = OPTION.matcher(options);
 		while (matcher.find()) {
-			String key = matcher.group(1).toLowerCase();
+			final String key = matcher.group(1).toLowerCase();
 			if (matcher.group(2) == null && matcher.group(3) == null) {
 				result.put(key, true);
 			} else if (matcher.group(3) == null) {
 				result.put(key, cleanupOption(matcher.group(2)));
 			} else {
-				List<String> groupValues = new ArrayList<>(matcher.groupCount() - 1);
+				final List<String> groupValues = new ArrayList<>(matcher.groupCount() - 1);
 				for (int i = 2; i <= matcher.groupCount(); ++i) {
-					String group = matcher.group(i);
+					final String group = matcher.group(i);
 					if (group != null) {
 						groupValues.add(cleanupOption(group));
 					}
@@ -321,7 +326,7 @@ public class MediaWikiParserTest {
 		return result;
 	}
 
-	private static String cleanupOption(String option) {
+	private static String cleanupOption(final String option) {
 		if (option.startsWith("\"")) {
 			return option.substring(1, option.length() - 1);
 		}
@@ -331,7 +336,7 @@ public class MediaWikiParserTest {
 		return option;
 	}
 
-	private static String removeNewlineAtEnd(String value) {
+	private static String removeNewlineAtEnd(final String value) {
 		if (value.endsWith("\n")) {
 			return value.substring(0, value.length() - 1);
 		}

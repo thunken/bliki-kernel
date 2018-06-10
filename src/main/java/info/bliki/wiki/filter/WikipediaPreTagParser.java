@@ -1,9 +1,12 @@
 package info.bliki.wiki.filter;
 
+import java.util.List;
+
 import info.bliki.htmlcleaner.ContentToken;
 import info.bliki.htmlcleaner.EndTagToken;
 import info.bliki.htmlcleaner.TagNode;
 import info.bliki.htmlcleaner.TagToken;
+import info.bliki.util.Throwables;
 import info.bliki.wiki.model.Configuration;
 import info.bliki.wiki.model.DefaultEventListener;
 import info.bliki.wiki.model.IEventListener;
@@ -18,22 +21,22 @@ import info.bliki.wiki.tags.util.INoBodyParsingTag;
 import info.bliki.wiki.tags.util.NodeAttribute;
 import info.bliki.wiki.tags.util.TagStack;
 import info.bliki.wiki.tags.util.WikiTagNode;
-
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A Wikipedia syntax parser for parsing in wiki preformatted blocks (rendered as &lt;pre&gt;...&lt;/pre&gt;)
  *
  */
+@Slf4j
 public class WikipediaPreTagParser extends AbstractWikipediaParser {
-	private boolean fHtmlCodes = true;
+	private final boolean fHtmlCodes = true;
 	private IEventListener fEventListener;
 
-	public WikipediaPreTagParser(String stringSource) {
+	public WikipediaPreTagParser(final String stringSource) {
 		this(stringSource, null);
 	}
 
-	public WikipediaPreTagParser(String stringSource, IEventListener wikiListener) {
+	public WikipediaPreTagParser(final String stringSource, final IEventListener wikiListener) {
 		super(stringSource);
 		if (wikiListener == null) {
 			fEventListener = DefaultEventListener.CONST;
@@ -88,7 +91,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 					break;
 				case '<':
 					if (fHtmlCodes) {
-						int htmlStartPosition = fCurrentPosition;
+						final int htmlStartPosition = fCurrentPosition;
 						// HTML tags are allowed
 						try {
 							switch (fStringSource.charAt(fCurrentPosition)) {
@@ -101,16 +104,16 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 
 								if (fSource[fCurrentPosition] != '/') {
 									// opening HTML tag
-									WikiTagNode tagNode = parseTag(fCurrentPosition);
+									final WikiTagNode tagNode = parseTag(fCurrentPosition);
 									if (tagNode != null) {
-										String tagName = tagNode.getTagName();
+										final String tagName = tagNode.getTagName();
 										TagToken tag = fWikiModel.getTokenMap().get(tagName);
-										if ((tag != null) && !(tag instanceof HTMLBlockTag)) {
+										if (tag != null && !(tag instanceof HTMLBlockTag)) {
 											tag = (TagToken) tag.clone();
 
 											if (tag instanceof TagNode) {
-												TagNode node = (TagNode) tag;
-												List<NodeAttribute> attributes = tagNode.getAttributesEx();
+												final TagNode node = (TagNode) tag;
+												final List<NodeAttribute> attributes = tagNode.getAttributesEx();
 												Attribute attr;
 												for (int i = 1; i < attributes.size(); i++) {
 													attr = attributes.get(i);
@@ -125,7 +128,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 
 											fCurrentPosition = fScannerPosition;
 
-											String allowedParents = tag.getParents();
+											final String allowedParents = tag.getParents();
 											if (allowedParents != null) {
 												reduceTokenStack(tag);
 											}
@@ -137,16 +140,16 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 									}
 								} else {
 									// closing HTML tag
-									WikiTagNode tagNode = parseTag(++fCurrentPosition);
+									final WikiTagNode tagNode = parseTag(++fCurrentPosition);
 									if (tagNode != null) {
-										String tagName = tagNode.getTagName();
-										TagToken tag = fWikiModel.getTokenMap().get(tagName);
-										if ((tag != null) && !(tag instanceof HTMLBlockTag)) {
+										final String tagName = tagNode.getTagName();
+										final TagToken tag = fWikiModel.getTokenMap().get(tagName);
+										if (tag != null && !(tag instanceof HTMLBlockTag)) {
 											createContentToken(2);
 											fCurrentPosition = fScannerPosition;
 
 											if (fWikiModel.stackSize() > 0) {
-												TagToken topToken = fWikiModel.peekNode();
+												final TagToken topToken = fWikiModel.peekNode();
 												if (topToken.getName().equals(tag.getName())) {
 													fWikiModel.popNode();
 													return TokenIgnore;
@@ -162,7 +165,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 									}
 								}
 							}
-						} catch (IndexOutOfBoundsException e) {
+						} catch (final IndexOutOfBoundsException e) {
 							// do nothing
 						}
 						fCurrentPosition = htmlStartPosition;
@@ -178,12 +181,12 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 
 			}
 			// -----------------end switch while try--------------------
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// end of scanner text
 		}
 		try {
 			createContentToken(1);
-		} catch (IndexOutOfBoundsException e) {
+		} catch (final IndexOutOfBoundsException e) {
 			// end of scanner text
 		}
 		return TokenEOF;
@@ -195,7 +198,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 	 * @return <code>true</code> if a correct link was found
 	 */
 	private boolean parseWikiLink() {
-		int startLinkPosition = fCurrentPosition;
+		final int startLinkPosition = fCurrentPosition;
 		if (getNextChar('[')) {
 			return parseWikiTag();
 		} else {
@@ -203,7 +206,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 			fWhiteStart = false;
 
 			if (readUntilCharOrStopAtEOL(']')) {
-				String name = fStringSource.substring(startLinkPosition, fCurrentPosition - 1);
+				final String name = fStringSource.substring(startLinkPosition, fCurrentPosition - 1);
 
 				// if (handleHTTPLink(name)) {
 				// return true;
@@ -220,7 +223,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 	 * @return <code>true</code> if a correct link was found
 	 */
 	private boolean parseWikiTag() {
-		int startLinkPosition = fCurrentPosition;
+		final int startLinkPosition = fCurrentPosition;
 		int endLinkPosition;
 		// wikipedia link style
 		createContentToken(2);
@@ -228,7 +231,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 		int temp = fCurrentPosition;
 		if (findWikiLinkEnd()) {
 			endLinkPosition = fCurrentPosition - 2;
-			String name = fStringSource.substring(startLinkPosition, endLinkPosition);
+			final String name = fStringSource.substring(startLinkPosition, endLinkPosition);
 			// test for a suffix string behind the Wiki link. Useful for plurals.
 			// Example:
 			// Dolphins are [[aquatic mammal]]s that are closely related to [[whale]]s
@@ -239,7 +242,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 				fCurrentCharacter = fSource[fCurrentPosition];
 				if (Character.isLowerCase(fCurrentCharacter)) {
 					fCurrentPosition++;
-					StringBuilder suffixBuffer = new StringBuilder(16);
+					final StringBuilder suffixBuffer = new StringBuilder(16);
 					suffixBuffer.append(fCurrentCharacter);
 					while (true) {
 						fCurrentCharacter = fSource[fCurrentPosition++];
@@ -251,7 +254,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 					}
 					suffix = suffixBuffer.toString();
 				}
-			} catch (IndexOutOfBoundsException e) {
+			} catch (final IndexOutOfBoundsException e) {
 				fCurrentPosition = temp;
 			}
 			fEventListener.onWikiLink(fSource, startLinkPosition, endLinkPosition, suffix);
@@ -269,12 +272,12 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 		return false;
 	}
 
-	private void createTag(TagToken tag, WikiTagNode tagNode, int startMacroPosition) {
+	private void createTag(final TagToken tag, final WikiTagNode tagNode, final int startMacroPosition) {
 		String endTag;
 		String macroBodyString;
 		int index0;
-		String command = tagNode.getTagName();
-		if ((tag != null) && (tag instanceof IBodyTag) && (!tagNode.isEmptyXmlTag())) {
+		final String command = tagNode.getTagName();
+		if (tag != null && tag instanceof IBodyTag && !tagNode.isEmptyXmlTag()) {
 			endTag = command + '>';
 			index0 = Util.indexOfIgnoreCase(fStringSource, "</", endTag, startMacroPosition);
 
@@ -293,8 +296,8 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 		handleTag(tag, tagNode, macroBodyString);
 	}
 
-	private void handleTag(TagToken tag, WikiTagNode tagNode, String bodyString) {
-		String command = tagNode.getTagName();
+	private void handleTag(final TagToken tag, final WikiTagNode tagNode, final String bodyString) {
+		final String command = tagNode.getTagName();
 		try {
 			if (tag instanceof EndTagToken) {
 				fWikiModel.append(tag);
@@ -312,19 +315,18 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 					fWikiModel.popNode();
 				}
 			}
-		} catch (IllegalArgumentException e) {
-			TagNode divTagNode = new TagNode("div");
+		} catch (final IllegalArgumentException e) {
+			final TagNode divTagNode = new TagNode("div");
 			divTagNode.addAttribute("class", "error", true);
 			divTagNode.addChild(new ContentToken("IllegalArgumentException: " + command + " - " + e.getMessage()));
 			fWikiModel.append(divTagNode);
-			e.printStackTrace();
-		} catch (Throwable e) {
-			e.printStackTrace();
-			TagNode divTagNode = new TagNode("div");
+			Throwables.log(log, e);
+		} catch (final Throwable e) {
+			final TagNode divTagNode = new TagNode("div");
 			divTagNode.addAttribute("class", "error", true);
 			divTagNode.addChild(new ContentToken(command + ": " + e.getMessage()));
 			fWikiModel.append(divTagNode);
-			e.printStackTrace();
+			Throwables.log(log, e);
 		}
 	}
 
@@ -381,7 +383,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 	}
 
 	@Override
-	protected void setNoToC(boolean noToC) {
+	protected void setNoToC(final boolean noToC) {
 	}
 
 	/**
@@ -394,7 +396,7 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 	 * @param rawWikitext
 	 * @param wikiModel
 	 */
-	public static void parseRecursive(String rawWikitext, IWikiModel wikiModel) {
+	public static void parseRecursive(final String rawWikitext, final IWikiModel wikiModel) {
 		parseRecursive(rawWikitext, wikiModel, false, true);
 	}
 
@@ -410,23 +412,24 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 	 * @param noTOC
 	 * @param appendStack
 	 */
-	public static TagStack parseRecursive(String rawWikitext, IWikiModel wikiModel, boolean createOnlyLocalStack,
-			boolean noTOC) {
-		WikipediaPreTagParser parser = new WikipediaPreTagParser(rawWikitext);
+	public static TagStack parseRecursive(final String rawWikitext, final IWikiModel wikiModel,
+			final boolean createOnlyLocalStack, final boolean noTOC) {
+		final WikipediaPreTagParser parser = new WikipediaPreTagParser(rawWikitext);
 		return parser.parseRecursiveInternal(wikiModel, createOnlyLocalStack, noTOC);
 	}
 
 	@Override
-	public TagStack parseRecursiveInternal(IWikiModel wikiModel, boolean createOnlyLocalStack, boolean noTOC) {
+	public TagStack parseRecursiveInternal(final IWikiModel wikiModel, boolean createOnlyLocalStack,
+			final boolean noTOC) {
 		// local stack for this wiki snippet
-		TagStack localStack = new TagStack();
+		final TagStack localStack = new TagStack();
 		// global wiki model stack
-		TagStack globalWikiModelStack = wikiModel.swapStack(localStack);
+		final TagStack globalWikiModelStack = wikiModel.swapStack(localStack);
 		try {
-			int level = wikiModel.incrementRecursionLevel();
+			final int level = wikiModel.incrementRecursionLevel();
 
 			if (level > Configuration.PARSER_RECURSION_LIMIT) {
-				TagNode error = new TagNode("span");
+				final TagNode error = new TagNode("span");
 				error.addAttribute("class", "error", true);
 				error.addChild(new ContentToken("Error - recursion limit exceeded parsing wiki tags."));
 				localStack.append(error);
@@ -435,12 +438,12 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 			setModel(wikiModel);
 			runParser();
 			return localStack;
-		} catch (InvalidPreWikiTag ipwt) {
+		} catch (final InvalidPreWikiTag ipwt) {
 			createOnlyLocalStack = true;
 			throw ipwt;
 		} catch (Exception | Error e) {
-			e.printStackTrace();
-			TagNode error = new TagNode("span");
+			Throwables.log(log, e);
+			final TagNode error = new TagNode("span");
 			error.addAttribute("class", "error", true);
 			error.addChild(new ContentToken(e.getClass().getSimpleName()));
 			localStack.append(error);
@@ -459,8 +462,8 @@ public class WikipediaPreTagParser extends AbstractWikipediaParser {
 	/**
 	 * Reduce the current token stack until an allowed parent is at the top of the stack
 	 */
-	private void reduceTokenStack(TagToken node) {
-		String allowedParents = node.getParents();
+	private void reduceTokenStack(final TagToken node) {
+		final String allowedParents = node.getParents();
 		if (allowedParents != null) {
 			TagToken tag;
 			int index;

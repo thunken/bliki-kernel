@@ -1,22 +1,26 @@
 package info.bliki.wiki.template.expr;
 
-import info.bliki.wiki.template.expr.eval.DoubleEvaluator;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import info.bliki.util.Throwables;
+import info.bliki.wiki.template.expr.eval.DoubleEvaluator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Tests evaluation in <code>double</code> Mediwiki expression mode
  */
+@Slf4j
 public class EvalDoubleTestCase {
 
-	public void check(String in, String compareWith) {
+	public void check(final String in, final String compareWith) {
 		try {
-			DoubleEvaluator engine = new DoubleEvaluator();
-			double d = engine.evaluate(in);
+			final DoubleEvaluator engine = new DoubleEvaluator();
+			final double d = engine.evaluate(in);
 			assertThat(compareWith).isEqualTo(Double.valueOf(d).toString());
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (final Exception e) {
+			Throwables.log(log, e);
 			assertThat(e.getMessage()).isEqualTo("");
 		}
 	}

@@ -1,9 +1,11 @@
 package info.bliki.wiki.template;
 
+import java.util.List;
+
+import info.bliki.util.Throwables;
 import info.bliki.wiki.model.Configuration;
 import info.bliki.wiki.model.IWikiModel;
-
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A template parser function for <code>{{ #if: ... }}</code> syntax. See
@@ -11,12 +13,14 @@ import java.util.List;
  * Help:Extension:ParserFunctions</a>
  *
  */
+@Slf4j
 public class If extends AbstractTemplateFunction {
+
 	public final static ITemplateFunction CONST = new If();
 
 	@Override
-	public String parseFunction(List<String> list, IWikiModel model, char[] src, int beginIndex, int endIndex,
-			boolean isSubst) {
+	public String parseFunction(final List<String> list, final IWikiModel model, final char[] src, final int beginIndex,
+			final int endIndex, final boolean isSubst) {
 		if (list.size() > 1) {
 			String ifCondition = "";
 			try {
@@ -30,12 +34,12 @@ public class If extends AbstractTemplateFunction {
 						return isSubst ? list.get(2) : parseTrim(list.get(2), model);
 					}
 				}
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				if (Configuration.DEBUG) {
-					System.out.println("#if error: " + ifCondition);
+					log.debug("#if error: " + ifCondition);
 				}
 				if (Configuration.STACKTRACE) {
-					e.printStackTrace();
+					Throwables.log(log, e);
 				}
 				return "<div class=\"error\">Expression error: " + e.getMessage() + "</div>";
 			}

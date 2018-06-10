@@ -1,23 +1,32 @@
 package info.bliki.wiki;
 
+import java.awt.Component;
+import java.awt.Container;
+import java.io.IOException;
+import java.util.Locale;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+
 import info.bliki.html.HTML2WikiConverter;
 import info.bliki.html.wikipedia.ToWikipedia;
+import info.bliki.util.Throwables;
 import info.bliki.wiki.filter.PlainTextConverter;
 import info.bliki.wiki.model.Configuration;
 import info.bliki.wiki.model.WikiModel;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.IOException;
-import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A converter tool for using the Wiki2HTML, Plain2Wiki and HTML2Wiki conversion functions in a Java Swing GUI.
  */
+@Slf4j
 public class BlikiConverter extends JFrame {
+
 	class ClearListener implements java.awt.event.ActionListener {
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent event) {
+		public void actionPerformed(final java.awt.event.ActionEvent event) {
 			input.setText("");
 			output.setText("");
 		}
@@ -25,25 +34,25 @@ public class BlikiConverter extends JFrame {
 
 	class Html2WikiListener implements java.awt.event.ActionListener {
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent event) {
-			String strData = input.getText();
-			HTML2WikiConverter conv = new HTML2WikiConverter(strData);
-			String result = conv.toWiki(new ToWikipedia(true, true, true));
+		public void actionPerformed(final java.awt.event.ActionEvent event) {
+			final String strData = input.getText();
+			final HTML2WikiConverter conv = new HTML2WikiConverter(strData);
+			final String result = conv.toWiki(new ToWikipedia(true, true, true));
 			output.setText(result);
 		}
 	}
 
 	class Wiki2HtmlListener implements java.awt.event.ActionListener {
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent event) {
-			String strData = input.getText();
-			WikiModel wikiModel = new WikiModel(new Configuration(), Locale.ENGLISH, "${image}", "${title}");
+		public void actionPerformed(final java.awt.event.ActionEvent event) {
+			final String strData = input.getText();
+			final WikiModel wikiModel = new WikiModel(new Configuration(), Locale.ENGLISH, "${image}", "${title}");
 			wikiModel.setUp();
 			try {
-				String result = wikiModel.render(strData, false);
+				final String result = wikiModel.render(strData, false);
 				output.setText(result);
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (final IOException e) {
+				Throwables.log(log, e);
 			} finally {
 				wikiModel.tearDown();
 			}
@@ -53,15 +62,15 @@ public class BlikiConverter extends JFrame {
 	class Wiki2PlainListener implements java.awt.event.ActionListener {
 
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent event) {
-			String strData = input.getText();
-			WikiModel wikiModel = new WikiModel(new Configuration(), Locale.ENGLISH, "${image}", "${title}");
+		public void actionPerformed(final java.awt.event.ActionEvent event) {
+			final String strData = input.getText();
+			final WikiModel wikiModel = new WikiModel(new Configuration(), Locale.ENGLISH, "${image}", "${title}");
 			wikiModel.setUp();
 			try {
-				String result = wikiModel.render(new PlainTextConverter(), strData, false);
+				final String result = wikiModel.render(new PlainTextConverter(), strData, false);
 				output.setText(result);
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (final IOException e) {
+				Throwables.log(log, e);
 			} finally {
 				wikiModel.tearDown();
 			}
@@ -71,20 +80,15 @@ public class BlikiConverter extends JFrame {
 	private static final long serialVersionUID = 6600498097600405919L;
 
 	private static void createBlikiConverter() {
-		BlikiConverter frame = new BlikiConverter("The bliki converter demo application");
+		final BlikiConverter frame = new BlikiConverter("The bliki converter demo application");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addComponentsToPane(frame.getContentPane());
 		frame.pack();
 		frame.setVisible(true);
 	}
 
-	public static void main(String[] args) {
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				createBlikiConverter();
-			}
-		});
+	public static void main(final String[] args) {
+		javax.swing.SwingUtilities.invokeLater(() -> createBlikiConverter());
 	}
 
 	private javax.swing.JButton wikiToHtmlButton;
@@ -96,11 +100,11 @@ public class BlikiConverter extends JFrame {
 
 	private javax.swing.JTextArea output;
 
-	public BlikiConverter(String name) {
+	public BlikiConverter(final String name) {
 		super(name);
 	}
 
-	private void addComponentsToPane(Container container) {
+	private void addComponentsToPane(final Container container) {
 		wikiToHtmlButton = new javax.swing.JButton("Wiki text to HTML");
 		wikiToHtmlButton.addActionListener(new Wiki2HtmlListener());
 		wikiToWikiPlaintext = new javax.swing.JButton("Wiki text to plain text");
@@ -110,9 +114,9 @@ public class BlikiConverter extends JFrame {
 		clearButton = new javax.swing.JButton("Clear input/output");
 		clearButton.addActionListener(new ClearListener());
 		input = new javax.swing.JTextArea(20, 80);
-		JScrollPane inputSP = new JScrollPane(input);
+		final JScrollPane inputSP = new JScrollPane(input);
 		output = new javax.swing.JTextArea(20, 80);
-		JScrollPane outputSP = new JScrollPane(output);
+		final JScrollPane outputSP = new JScrollPane(output);
 
 		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
@@ -122,8 +126,8 @@ public class BlikiConverter extends JFrame {
 		container.add(outputSP);
 	}
 
-	private void addButtonPanelToPane(Container container) {
-		JPanel horizontalButtonPanel = new JPanel();
+	private void addButtonPanelToPane(final Container container) {
+		final JPanel horizontalButtonPanel = new JPanel();
 		horizontalButtonPanel.setLayout(new java.awt.FlowLayout());
 		horizontalButtonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		horizontalButtonPanel.add(wikiToHtmlButton);

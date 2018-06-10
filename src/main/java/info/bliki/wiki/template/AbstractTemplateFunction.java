@@ -1,15 +1,18 @@
 package info.bliki.wiki.template;
 
-import info.bliki.wiki.filter.TemplateParser;
-import info.bliki.wiki.model.IWikiModel;
-
 import java.io.IOException;
 import java.util.List;
+
+import info.bliki.util.Throwables;
+import info.bliki.wiki.filter.TemplateParser;
+import info.bliki.wiki.model.IWikiModel;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * An abstract template parser function.
  *
  */
+@Slf4j
 public abstract class AbstractTemplateFunction implements ITemplateFunction {
 
 	@Override
@@ -33,15 +36,15 @@ public abstract class AbstractTemplateFunction implements ITemplateFunction {
 	 *            the wiki model
 	 * @return
 	 */
-	public static String parse(String content, IWikiModel model) {
+	public static String parse(final String content, final IWikiModel model) {
 		if (content == null || content.length() == 0) {
 			return "";
 		}
-		StringBuilder buf = new StringBuilder(content.length());
+		final StringBuilder buf = new StringBuilder(content.length());
 		try {
 			TemplateParser.parse(content, model, buf, false);
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (final IOException e) {
+			Throwables.log(log, e);
 		}
 		return buf.toString();
 	}
@@ -55,7 +58,7 @@ public abstract class AbstractTemplateFunction implements ITemplateFunction {
 	 *            the wiki model
 	 * @return
 	 */
-	public static String parseTrim(String content, IWikiModel model) {
+	public static String parseTrim(final String content, final IWikiModel model) {
 		return parse(content, model).trim();
 	}
 }
