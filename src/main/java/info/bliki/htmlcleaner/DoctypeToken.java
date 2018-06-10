@@ -40,81 +40,83 @@ package info.bliki.htmlcleaner;
 import java.io.IOException;
 
 /**
- * <p>HTML doctype token.</p>
+ * <p>
+ * HTML doctype token.
+ * </p>
  *
  * Created by: Vladimir Nikic<br/>
  * Date: November, 2006.
  */
 public class DoctypeToken implements BaseToken {
 
-    private String part1;
-    private String part2;
-    private String part3;
-    private String part4;
+	private String part1;
+	private String part2;
+	private String part3;
+	private String part4;
 
-    public DoctypeToken(String p1, String p2, String p3, String p4) {
-        this.part1 = p1 != null ? p1.toUpperCase() : p1;
-        this.part2 = p2 != null ? p2.toUpperCase() : p2;
-        this.part3 = clean(p3);
-        this.part4 = clean(p4);
-    }
+	public DoctypeToken(String p1, String p2, String p3, String p4) {
+		this.part1 = p1 != null ? p1.toUpperCase() : p1;
+		this.part2 = p2 != null ? p2.toUpperCase() : p2;
+		this.part3 = clean(p3);
+		this.part4 = clean(p4);
+	}
 
-    private String clean(String s) {
-        if (s != null) {
-            s = s.replace('>', ' ');
-            s = s.replace('<', ' ');
-            s = s.replace('&', ' ');
-            s = s.replace('\'', ' ');
-            s = s.replace('\"', ' ');
-        }
+	private String clean(String s) {
+		if (s != null) {
+			s = s.replace('>', ' ');
+			s = s.replace('<', ' ');
+			s = s.replace('&', ' ');
+			s = s.replace('\'', ' ');
+			s = s.replace('\"', ' ');
+		}
 
-        return s;
-    }
+		return s;
+	}
 
-    public boolean isValid() {
-        if ( part1 == null || "".equals(part1) ) {
-            return false;
-        }
+	public boolean isValid() {
+		if (part1 == null || "".equals(part1)) {
+			return false;
+		}
 
-        if ( !"public".equalsIgnoreCase(part2) && !"system".equalsIgnoreCase(part2) ) {
-            return false;
-        }
+		if (!"public".equalsIgnoreCase(part2) && !"system".equalsIgnoreCase(part2)) {
+			return false;
+		}
 
-        if ( "system".equalsIgnoreCase(part2) && part4 != null && !"".equals(part4) ) {
-            return false;
-        }
+		if ("system".equalsIgnoreCase(part2) && part4 != null && !"".equals(part4)) {
+			return false;
+		}
 
-        if ( "public".equalsIgnoreCase(part2) && (part4 == null || "".equals(part4)) ) {
-            return false;
-        }
+		if ("public".equalsIgnoreCase(part2) && (part4 == null || "".equals(part4))) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public String getContent() {
-        String result = "<!DOCTYPE " + part1 + " ";
-        result += part2 + " \"" + part3 + "\"";
-        if ( part4 != null && !"".equals(part4) ) {
-            result += " \"" + part4 + "\"";
-        }
+	public String getContent() {
+		String result = "<!DOCTYPE " + part1 + " ";
+		result += part2 + " \"" + part3 + "\"";
+		if (part4 != null && !"".equals(part4)) {
+			result += " \"" + part4 + "\"";
+		}
 
-        result += ">";
+		result += ">";
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-        public String toString() {
-        return getContent();
-    }
+	@Override
+	public String toString() {
+		return getContent();
+	}
 
-    public String getName() {
-        return "";
-    }
+	public String getName() {
+		return "";
+	}
 
-    @Override
-    public void serialize(XmlSerializer xmlSerializer) throws IOException {
-        xmlSerializer.getWriter().write(getContent() + "\n");
-    }
+	@Override
+	public void serialize(XmlSerializer xmlSerializer) throws IOException {
+		xmlSerializer.getWriter().write(getContent() + "\n");
+	}
 
 }

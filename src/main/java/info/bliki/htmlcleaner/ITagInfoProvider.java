@@ -39,9 +39,8 @@ package info.bliki.htmlcleaner;
 
 /**
  * <p>
- * Provides set of TagInfo instances. The instance of this interface is used as a
- * collection of tag definitions used in cleanup process. Implementing this interface
- * desired behaviour of cleaner can be achived.<br/>
+ * Provides set of TagInfo instances. The instance of this interface is used as a collection of tag definitions used in
+ * cleanup process. Implementing this interface desired behaviour of cleaner can be achived.<br/>
  * In most cases implementation will be or contain a kind of Map.
  * </p>
  *
@@ -50,6 +49,6 @@ package info.bliki.htmlcleaner;
  */
 public interface ITagInfoProvider {
 
-    public TagInfo getTagInfo(String tagName);
+	public TagInfo getTagInfo(String tagName);
 
 }

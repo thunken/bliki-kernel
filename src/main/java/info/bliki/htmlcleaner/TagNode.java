@@ -53,8 +53,8 @@ import java.util.TreeMap;
 
 /**
  * <p>
- * XML node node tag - it is produced during cleaning process when all start and
- * end tokens are removed and replaced by instances of TagNode.
+ * XML node node tag - it is produced during cleaning process when all start and end tokens are removed and replaced by
+ * instances of TagNode.
  * </p>
  *
  * Created by: Vladimir Nikic<br/>
@@ -63,245 +63,243 @@ import java.util.TreeMap;
  * Modified by: Axel Kramer<br/>
  */
 public class TagNode extends TagToken implements PlainTextConvertable {
-    /**
-     * Allowed attributes
-     *
-     * <b>Note:</b> the 'style' attribute isn't allowed by default because of XSS
-     * risks; if you need this attribute (or other attributes not listed here) you
-     * can add it with the <code>static addAllowedAttribute()</code> method.
-     */
-    public static final String[] ALLOWED_ATTRIBUTES = { "title", "align", "lang", "dir", "width", "height", "bgcolor", "clear",
-            "noshade", "cite", "size", "face", "color", "type", "start", "value", "compact", "summary", "width", "border", "frame",
-            "rules", "cellspacing", "cellpadding", "valign", "char", "charoff", "colgroup", "col", "span", "abbr", "axis", "headers",
-            "scope", "rowspan", "colspan", "id", "class", "name", "href", "rel", "alt", "src" };
+	/**
+	 * Allowed attributes
+	 *
+	 * <b>Note:</b> the 'style' attribute isn't allowed by default because of XSS risks; if you need this attribute (or
+	 * other attributes not listed here) you can add it with the <code>static addAllowedAttribute()</code> method.
+	 */
+	public static final String[] ALLOWED_ATTRIBUTES = { "title", "align", "lang", "dir", "width", "height", "bgcolor",
+			"clear", "noshade", "cite", "size", "face", "color", "type", "start", "value", "compact", "summary",
+			"width", "border", "frame", "rules", "cellspacing", "cellpadding", "valign", "char", "charoff", "colgroup",
+			"col", "span", "abbr", "axis", "headers", "scope", "rowspan", "colspan", "id", "class", "name", "href",
+			"rel", "alt", "src" };
 
-    protected static final HashSet<String> ALLOWED_ATTRIBUTES_SET = new HashSet<>();
+	protected static final HashSet<String> ALLOWED_ATTRIBUTES_SET = new HashSet<>();
 
-    static {
-        Collections.addAll(ALLOWED_ATTRIBUTES_SET, ALLOWED_ATTRIBUTES);
-    }
+	static {
+		Collections.addAll(ALLOWED_ATTRIBUTES_SET, ALLOWED_ATTRIBUTES);
+	}
 
-    public static Set<String> getAllowedAttributes() {
-        return ALLOWED_ATTRIBUTES_SET;
-    }
+	public static Set<String> getAllowedAttributes() {
+		return ALLOWED_ATTRIBUTES_SET;
+	}
 
-    /**
-     * Add an additional allowed attribute name
-     *
-     * <b>Note:</b> the 'style' attribute isn't allowed by default because of XSS
-     * risks; if you need this attribute (or other attributes not listed here) you
-     * can add it with this method.
-     */
-    public static boolean addAllowedAttribute(String key) {
-        return ALLOWED_ATTRIBUTES_SET.add(key);
-    }
+	/**
+	 * Add an additional allowed attribute name
+	 *
+	 * <b>Note:</b> the 'style' attribute isn't allowed by default because of XSS risks; if you need this attribute (or
+	 * other attributes not listed here) you can add it with this method.
+	 */
+	public static boolean addAllowedAttribute(String key) {
+		return ALLOWED_ATTRIBUTES_SET.add(key);
+	}
 
-    private TagNode parent;
-    private Map<String, String> attributes = new TreeMap<>();
-    private HashMap<String, Object> objectAttributes;
-    private List<Object> children = new ArrayList<>();
-    private List<BaseToken> itemsToMove;
-    private transient boolean isFormed;
+	private TagNode parent;
+	private Map<String, String> attributes = new TreeMap<>();
+	private HashMap<String, Object> objectAttributes;
+	private List<Object> children = new ArrayList<>();
+	private List<BaseToken> itemsToMove;
+	private transient boolean isFormed;
 
-    public TagNode() {
-    }
+	public TagNode() {
+	}
 
-    public TagNode(String name) {
-        super(name.toLowerCase());
-    }
-    public Map<String, String> getAttributes() {
-        return attributes;
-    }
+	public TagNode(String name) {
+		super(name.toLowerCase());
+	}
 
-    /**
-     * Get a special object for this TagNode which contains original information
-     * from the parsed wiki object (for example the ImageFormat or original wiki
-     * topic string).
-     *
-     * @param attName
-     *          the attribute name
-     * @param attValue
-     *          the attribute value
-     * @see #addObjectAttribute(String, Object)
-     * @see info.bliki.wiki.model.ImageFormat
-     */
-    public Map<String, Object> getObjectAttributes() {
-        return objectAttributes;
-    }
+	public Map<String, String> getAttributes() {
+		return attributes;
+	}
 
-    public List<Object> getChildren() {
-        return children;
-    }
+	/**
+	 * Get a special object for this TagNode which contains original information from the parsed wiki object (for
+	 * example the ImageFormat or original wiki topic string).
+	 *
+	 * @param attName
+	 *            the attribute name
+	 * @param attValue
+	 *            the attribute value
+	 * @see #addObjectAttribute(String, Object)
+	 * @see info.bliki.wiki.model.ImageFormat
+	 */
+	public Map<String, Object> getObjectAttributes() {
+		return objectAttributes;
+	}
 
-    public TagNode getParent() {
-        return parent;
-    }
+	public List<Object> getChildren() {
+		return children;
+	}
 
-    public void setParent(TagNode parent) {
-        this.parent = parent;
-    }
+	public TagNode getParent() {
+		return parent;
+	}
 
-    @Override
-    public boolean addAttribute(String attName, String attValue, boolean checkXSS) {
-        if (attName != null && (!"".equals(attName.trim()) && attValue != null)) {
-            boolean checkedAttributes = true;
-            String nameLowerCased = attName.toLowerCase();
-            String valueLowerCased = attValue.toLowerCase();
-            if (checkXSS && (!getAllowedAttributes().contains(nameLowerCased))) {
-                if (!isAllowedAttribute(nameLowerCased)) {
-                    checkedAttributes = false;
-                }
-            }
-            if (checkedAttributes && valueLowerCased.contains("javascript:")) {
-                checkedAttributes = false;
-            }
-            // attempt to prevent cross-site scripting inside CSS style (this is
-            // not complete!)
-            // see https://openmya.hacker.jp/hasegawa/security/expression.txt
-            if (checkedAttributes && attName.equalsIgnoreCase("style")) {
-                if (valueLowerCased.contains("expression")) {
-                    checkedAttributes = false;
-                } else if (valueLowerCased.contains("url")) {
-                    checkedAttributes = false;
-                } else if (valueLowerCased.contains("tps")) {
-                    checkedAttributes = false;
-                }
-            }
+	public void setParent(TagNode parent) {
+		this.parent = parent;
+	}
 
-            if (checkedAttributes) {
-                attributes.put(nameLowerCased, attValue);
-                return true;
-            }
-        }
-        return false;
-    }
+	@Override
+	public boolean addAttribute(String attName, String attValue, boolean checkXSS) {
+		if (attName != null && (!"".equals(attName.trim()) && attValue != null)) {
+			boolean checkedAttributes = true;
+			String nameLowerCased = attName.toLowerCase();
+			String valueLowerCased = attValue.toLowerCase();
+			if (checkXSS && (!getAllowedAttributes().contains(nameLowerCased))) {
+				if (!isAllowedAttribute(nameLowerCased)) {
+					checkedAttributes = false;
+				}
+			}
+			if (checkedAttributes && valueLowerCased.contains("javascript:")) {
+				checkedAttributes = false;
+			}
+			// attempt to prevent cross-site scripting inside CSS style (this is
+			// not complete!)
+			// see https://openmya.hacker.jp/hasegawa/security/expression.txt
+			if (checkedAttributes && attName.equalsIgnoreCase("style")) {
+				if (valueLowerCased.contains("expression")) {
+					checkedAttributes = false;
+				} else if (valueLowerCased.contains("url")) {
+					checkedAttributes = false;
+				} else if (valueLowerCased.contains("tps")) {
+					checkedAttributes = false;
+				}
+			}
 
-    @Override
-    public boolean isAllowedAttribute(String attName) {
-        return false;
-    }
+			if (checkedAttributes) {
+				attributes.put(nameLowerCased, attValue);
+				return true;
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Add a special object to this TagNode which contains original information
-     * from the parsed wiki object (for example the ImageFormat or original wiki
-     * topic string)
-     *
-     * @param attName
-     *          the attribute name
-     * @param attValue
-     *          the attribute value
-     * @see #getObjectAttributes()
-     * @see info.bliki.wiki.model.ImageFormat
-     */
-    public void addObjectAttribute(String attName, Object attValue) {
-        if (attName != null && attValue != null) {
-            if (objectAttributes == null) {
-                objectAttributes = new HashMap<>(4);
-            }
-            objectAttributes.put(attName, attValue);
-        }
-    }
+	@Override
+	public boolean isAllowedAttribute(String attName) {
+		return false;
+	}
 
-    public void addChild(Object child) {
-        children.add(child);
-        if (child instanceof TagNode) {
-            TagNode childTagNode = (TagNode) child;
-            childTagNode.parent = this;
-        }
-    }
+	/**
+	 * Add a special object to this TagNode which contains original information from the parsed wiki object (for example
+	 * the ImageFormat or original wiki topic string)
+	 *
+	 * @param attName
+	 *            the attribute name
+	 * @param attValue
+	 *            the attribute value
+	 * @see #getObjectAttributes()
+	 * @see info.bliki.wiki.model.ImageFormat
+	 */
+	public void addObjectAttribute(String attName, Object attValue) {
+		if (attName != null && attValue != null) {
+			if (objectAttributes == null) {
+				objectAttributes = new HashMap<>(4);
+			}
+			objectAttributes.put(attName, attValue);
+		}
+	}
 
-    public void addChildren(List<?> children) {
-        if (children != null) {
-            for (Object child : children) {
-                addChild(child);
-            }
-        }
-    }
+	public void addChild(Object child) {
+		children.add(child);
+		if (child instanceof TagNode) {
+			TagNode childTagNode = (TagNode) child;
+			childTagNode.parent = this;
+		}
+	}
 
-    public void addItemForMoving(BaseToken item) {
-        if (itemsToMove == null) {
-            itemsToMove = new ArrayList<>();
-        }
+	public void addChildren(List<?> children) {
+		if (children != null) {
+			for (Object child : children) {
+				addChild(child);
+			}
+		}
+	}
 
-        itemsToMove.add(item);
-    }
+	public void addItemForMoving(BaseToken item) {
+		if (itemsToMove == null) {
+			itemsToMove = new ArrayList<>();
+		}
 
-    public List<BaseToken> getItemsToMove() {
-        return itemsToMove;
-    }
+		itemsToMove.add(item);
+	}
 
-    public void setItemsToMove(List<BaseToken> itemsToMove) {
-        this.itemsToMove = itemsToMove;
-    }
+	public List<BaseToken> getItemsToMove() {
+		return itemsToMove;
+	}
 
-    public boolean isFormed() {
-        return isFormed;
-    }
+	public void setItemsToMove(List<BaseToken> itemsToMove) {
+		this.itemsToMove = itemsToMove;
+	}
 
-    public void setFormed() {
-        this.isFormed = true;
-    }
+	public boolean isFormed() {
+		return isFormed;
+	}
 
-    @Override
-    public void serialize(XmlSerializer xmlSerializer) throws IOException {
-        xmlSerializer.serialize(this);
-    }
+	public void setFormed() {
+		this.isFormed = true;
+	}
 
-    public TagNode makeCopy() {
-        TagNode copy = new TagNode(this.name);
-        copy.attributes = this.attributes;
-        copy.objectAttributes = this.objectAttributes;
-        return copy;
-    }
+	@Override
+	public void serialize(XmlSerializer xmlSerializer) throws IOException {
+		xmlSerializer.serialize(this);
+	}
 
-    @Override
-    public Object clone() {
-        TagNode tt = (TagNode) super.clone();
-        tt.parent = this.parent;
-        tt.itemsToMove = this.itemsToMove;
-        tt.isFormed = this.isFormed;
-        tt.children = new ArrayList<>(this.children);
-        tt.attributes = new TreeMap<>(this.attributes);
-        if (objectAttributes == null) {
-            tt.objectAttributes = null;
-        } else {
-            tt.objectAttributes = new HashMap<>(objectAttributes);
-        }
-        return tt;
-    }
+	public TagNode makeCopy() {
+		TagNode copy = new TagNode(this.name);
+		copy.attributes = this.attributes;
+		copy.objectAttributes = this.objectAttributes;
+		return copy;
+	}
 
-    @Override
-    public String getParents() {
-        return null;
-    }
+	@Override
+	public Object clone() {
+		TagNode tt = (TagNode) super.clone();
+		tt.parent = this.parent;
+		tt.itemsToMove = this.itemsToMove;
+		tt.isFormed = this.isFormed;
+		tt.children = new ArrayList<>(this.children);
+		tt.attributes = new TreeMap<>(this.attributes);
+		if (objectAttributes == null) {
+			tt.objectAttributes = null;
+		} else {
+			tt.objectAttributes = new HashMap<>(objectAttributes);
+		}
+		return tt;
+	}
 
-    @Override
-    public void renderPlainText(ITextConverter converter, Appendable buf, IWikiModel wikiModel) throws IOException {
-        List<Object> children = getChildren();
-        for (Object child : children) {
-            if (child instanceof PlainTextConvertable) {
-                ((PlainTextConvertable) child).renderPlainText(converter, buf, wikiModel);
-            }
-        }
-    }
+	@Override
+	public String getParents() {
+		return null;
+	}
 
-    /**
-     * Get the pure content text without the tags from this HTMLTag
-     */
-    public String getBodyString() {
-        List<Object> children = getChildren();
-        if (children.size() > 0) {
-            StringBuilder buf = new StringBuilder(children.size() * 16);
-            for (Object child : children) {
-                if (child instanceof ContentToken) {
-                    buf.append(((ContentToken) child).getContent());
-                } else if (child instanceof TagNode) {
-                    buf.append(((TagNode) child).getBodyString());
-                }
-            }
-            return buf.toString();
-        } else {
-            return "";
-        }
-    }
+	@Override
+	public void renderPlainText(ITextConverter converter, Appendable buf, IWikiModel wikiModel) throws IOException {
+		List<Object> children = getChildren();
+		for (Object child : children) {
+			if (child instanceof PlainTextConvertable) {
+				((PlainTextConvertable) child).renderPlainText(converter, buf, wikiModel);
+			}
+		}
+	}
+
+	/**
+	 * Get the pure content text without the tags from this HTMLTag
+	 */
+	public String getBodyString() {
+		List<Object> children = getChildren();
+		if (children.size() > 0) {
+			StringBuilder buf = new StringBuilder(children.size() * 16);
+			for (Object child : children) {
+				if (child instanceof ContentToken) {
+					buf.append(((ContentToken) child).getContent());
+				} else if (child instanceof TagNode) {
+					buf.append(((TagNode) child).getBodyString());
+				}
+			}
+			return buf.toString();
+		} else {
+			return "";
+		}
+	}
 }

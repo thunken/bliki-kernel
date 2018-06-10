@@ -41,7 +41,7 @@ import java.io.IOException;
 
 /**
  * <p>
- *     Base token interface. Tokens are individual entities recognized by HTML parser.
+ * Base token interface. Tokens are individual entities recognized by HTML parser.
  * </p>
  *
  * Created by: Vladimir Nikic<br/>
@@ -49,6 +49,6 @@ import java.io.IOException;
  */
 public interface BaseToken {
 
-    void serialize(XmlSerializer xmlSerializer) throws IOException;
+	void serialize(XmlSerializer xmlSerializer) throws IOException;
 
 }

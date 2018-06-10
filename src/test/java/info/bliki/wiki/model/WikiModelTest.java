@@ -6,32 +6,38 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class WikiModelTest {
-    private WikiModel subject;
+	private WikiModel subject;
 
-    @Before public void setUp() throws Exception {
-        subject = new WikiModel("image", "link");
-    }
+	@Before
+	public void setUp() throws Exception {
+		subject = new WikiModel("image", "link");
+	}
 
-    @Test public void testIsInterWiki() throws Exception {
-        assertThat(subject.isInterWiki("w")).isTrue();
-        assertThat(subject.isInterWiki("s")).isTrue();
+	@Test
+	public void testIsInterWiki() throws Exception {
+		assertThat(subject.isInterWiki("w")).isTrue();
+		assertThat(subject.isInterWiki("s")).isTrue();
 
-        assertThat(subject.isInterWiki("Talk")).isFalse();
-    }
+		assertThat(subject.isInterWiki("Talk")).isFalse();
+	}
 
-    @Test public void testAppendRawNamespaceLinksWithInterWikLink() throws Exception {
-        assertThat(subject.appendRawNamespaceLinks("s:foo", "foo", true)).isTrue();
-    }
+	@Test
+	public void testAppendRawNamespaceLinksWithInterWikLink() throws Exception {
+		assertThat(subject.appendRawNamespaceLinks("s:foo", "foo", true)).isTrue();
+	}
 
-    @Test public void testAppendRawNamespaceLinksWithInterLanguageLink() throws Exception {
-        assertThat(subject.appendRawNamespaceLinks(":kk:", "foo", true)).isTrue();
-    }
+	@Test
+	public void testAppendRawNamespaceLinksWithInterLanguageLink() throws Exception {
+		assertThat(subject.appendRawNamespaceLinks(":kk:", "foo", true)).isTrue();
+	}
 
-    @Test public void testEncodeTitleToUrlWithUpperCase() throws Exception {
-        assertThat(subject.encodeTitleToUrl("title Foo", true)).isEqualTo("Title_Foo");
-    }
+	@Test
+	public void testEncodeTitleToUrlWithUpperCase() throws Exception {
+		assertThat(subject.encodeTitleToUrl("title Foo", true)).isEqualTo("Title_Foo");
+	}
 
-    @Test public void testEncodeTitleToUrlWithoutUpperCase() throws Exception {
-        assertThat(subject.encodeTitleToUrl("title Foo", false)).isEqualTo("title_Foo");
-    }
+	@Test
+	public void testEncodeTitleToUrlWithoutUpperCase() throws Exception {
+		assertThat(subject.encodeTitleToUrl("title Foo", false)).isEqualTo("title_Foo");
+	}
 }

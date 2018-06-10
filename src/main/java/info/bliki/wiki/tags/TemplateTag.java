@@ -10,23 +10,19 @@ import info.bliki.wiki.model.IWikiModel;
  * <p>
  * TODO: add support for #renderHTML.
  */
-public class TemplateTag extends HTMLTag
-{
-    public TemplateTag(String name)
-    {
-        super(name);
-    }
+public class TemplateTag extends HTMLTag {
+	public TemplateTag(String name) {
+		super(name);
+	}
 
-    @Override
-    public void renderHTML(ITextConverter converter, Appendable writer, IWikiModel model) throws IOException
-    {
-        // TODO: not supported yet
-        super.renderHTML(converter, writer, model);
-    }
+	@Override
+	public void renderHTML(ITextConverter converter, Appendable writer, IWikiModel model) throws IOException {
+		// TODO: not supported yet
+		super.renderHTML(converter, writer, model);
+	}
 
-    @Override
-    public boolean isReduceTokenStack()
-    {
-        return false;
-    }
+	@Override
+	public boolean isReduceTokenStack() {
+		return false;
+	}
 }

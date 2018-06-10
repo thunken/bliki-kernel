@@ -42,51 +42,53 @@ import java.io.Writer;
 import java.util.List;
 
 /**
- * <p>Simple XML serializer - creates resulting XML without indenting lines.</p>
+ * <p>
+ * Simple XML serializer - creates resulting XML without indenting lines.
+ * </p>
  *
  * Created by: Vladimir Nikic<br/>
  * Date: November, 2006.
  */
 public class SimpleXmlSerializer extends XmlSerializer {
 
-    protected SimpleXmlSerializer(Writer writer, HtmlCleaner htmlCleaner) {
-        super(writer, htmlCleaner);
-    }
+	protected SimpleXmlSerializer(Writer writer, HtmlCleaner htmlCleaner) {
+		super(writer, htmlCleaner);
+	}
 
-    private void serialize(List<Object> nodes, TagNode tagNode) throws IOException {
-        if ( nodes != null && !nodes.isEmpty() ) {
-            for (Object item : nodes) {
-                if (item != null) {
-                    if (item instanceof List) {
-                        @SuppressWarnings("unchecked")
-                        final List<Object> list = (List<Object>) item;
-                        serialize(list, tagNode);
-                    } else if ( item instanceof ContentToken ) {
-                        ContentToken contentToken = (ContentToken) item;
-                        String content = contentToken.getContent();
-                        if ( !dontEscape(tagNode) ) {
-                            content = escapeXml(content);
-                        } else {
-                            content = content.replaceAll("]]>", "]]&amp;");
-                        }
-                        writer.write(content);
-                    } else {
-                        ((BaseToken)item).serialize(this);
-                    }
-                }
-            }
-        }
-    }
+	private void serialize(List<Object> nodes, TagNode tagNode) throws IOException {
+		if (nodes != null && !nodes.isEmpty()) {
+			for (Object item : nodes) {
+				if (item != null) {
+					if (item instanceof List) {
+						@SuppressWarnings("unchecked")
+						final List<Object> list = (List<Object>) item;
+						serialize(list, tagNode);
+					} else if (item instanceof ContentToken) {
+						ContentToken contentToken = (ContentToken) item;
+						String content = contentToken.getContent();
+						if (!dontEscape(tagNode)) {
+							content = escapeXml(content);
+						} else {
+							content = content.replaceAll("]]>", "]]&amp;");
+						}
+						writer.write(content);
+					} else {
+						((BaseToken) item).serialize(this);
+					}
+				}
+			}
+		}
+	}
 
-    @Override
-        protected void serialize(TagNode tagNode) throws IOException {
-        serializeOpenTag(tagNode);
+	@Override
+	protected void serialize(TagNode tagNode) throws IOException {
+		serializeOpenTag(tagNode);
 
-        List<Object> tagChildren = tagNode.getChildren();
-        if ( !tagChildren.isEmpty() ) {
-            serialize(tagChildren, tagNode);
-            serializeEndTag(tagNode);
-        }
-    }
+		List<Object> tagChildren = tagNode.getChildren();
+		if (!tagChildren.isEmpty()) {
+			serialize(tagChildren, tagNode);
+			serializeEndTag(tagNode);
+		}
+	}
 
 }

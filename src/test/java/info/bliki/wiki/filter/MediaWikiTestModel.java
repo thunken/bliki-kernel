@@ -15,133 +15,133 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Wiki model implementation which allows some special JUnit tests with
- * namespaces and predefined templates
+ * Wiki model implementation which allows some special JUnit tests with namespaces and predefined templates
  *
  */
 public class MediaWikiTestModel extends WikiModel {
-    final protected Map<String, String> db;
+	final protected Map<String, String> db;
 
-    boolean fSemanticWebActive;
+	boolean fSemanticWebActive;
 
-    static {
-        TagNode.addAllowedAttribute("style");
-    }
+	static {
+		TagNode.addAllowedAttribute("style");
+	}
 
-    static Configuration getConfiguration() {
-        Configuration configuration = new Configuration();
-        configuration.addUriScheme("tel");
-        configuration.addInterwikiLink("intra", "/$1");
-        configuration.addTokenTag("chart", new ChartTag());
-        configuration.addTokenTag("inputbox", new IgnoreTag("inputbox"));
-        configuration.addTokenTag("imagemap", new IgnoreTag("imagemap"));
-        return configuration;
-    }
+	static Configuration getConfiguration() {
+		Configuration configuration = new Configuration();
+		configuration.addUriScheme("tel");
+		configuration.addInterwikiLink("intra", "/$1");
+		configuration.addTokenTag("chart", new ChartTag());
+		configuration.addTokenTag("inputbox", new IgnoreTag("inputbox"));
+		configuration.addTokenTag("imagemap", new IgnoreTag("imagemap"));
+		return configuration;
+	}
 
-    /**
-     * Add German namespaces to the wiki model
-     *
-     * @param imageBaseURL
-     * @param linkBaseURL
-     */
-    public MediaWikiTestModel(Locale locale, String imageBaseURL, String linkBaseURL, Map<String, String> db) {
-        super(getConfiguration(), locale, imageBaseURL, linkBaseURL);
-        this.db = db;
-        // add some basic pages assumed to always exist (at least in parserTests.txt):
-        db.put("Main_Page", "");
-        db.put("Special:Version", "");
-        setTemplateCallsCache(new HashMap<String, String>());
-        fSemanticWebActive = false;
-    }
+	/**
+	 * Add German namespaces to the wiki model
+	 *
+	 * @param imageBaseURL
+	 * @param linkBaseURL
+	 */
+	public MediaWikiTestModel(Locale locale, String imageBaseURL, String linkBaseURL, Map<String, String> db) {
+		super(getConfiguration(), locale, imageBaseURL, linkBaseURL);
+		this.db = db;
+		// add some basic pages assumed to always exist (at least in parserTests.txt):
+		db.put("Main_Page", "");
+		db.put("Special:Version", "");
+		setTemplateCallsCache(new HashMap<String, String>());
+		fSemanticWebActive = false;
+	}
 
-    /**
-     * Add templates: &quot;Test&quot;, &quot;Templ1&quot;, &quot;Templ2&quot;,
-     * &quot;Include Page&quot;
-     *
-     */
-    @Override
-    public String getRawWikiContent(ParsedPageName parsedPagename, Map<String, String> templateParameters) throws WikiModelContentException {
-        String result = super.getRawWikiContent(parsedPagename, templateParameters);
-        if (result != null) {
-            // found magic word template
-            return result;
-        }
-        String articleName = parsedPagename.pagename;
-        INamespaceValue namespace = parsedPagename.namespace;
-        String name = encodeTitleToUrl(articleName, true);
-        if (namespace == null) {
-            return db.get(name);
-        } else {
-            return db.get(namespace + ":" + name);
-        }
-    }
+	/**
+	 * Add templates: &quot;Test&quot;, &quot;Templ1&quot;, &quot;Templ2&quot;, &quot;Include Page&quot;
+	 *
+	 */
+	@Override
+	public String getRawWikiContent(ParsedPageName parsedPagename, Map<String, String> templateParameters)
+			throws WikiModelContentException {
+		String result = super.getRawWikiContent(parsedPagename, templateParameters);
+		if (result != null) {
+			// found magic word template
+			return result;
+		}
+		String articleName = parsedPagename.pagename;
+		INamespaceValue namespace = parsedPagename.namespace;
+		String name = encodeTitleToUrl(articleName, true);
+		if (namespace == null) {
+			return db.get(name);
+		} else {
+			return db.get(namespace + ":" + name);
+		}
+	}
 
-    @Override
-    public boolean isSemanticWebActive() {
-        return fSemanticWebActive;
-    }
+	@Override
+	public boolean isSemanticWebActive() {
+		return fSemanticWebActive;
+	}
 
-    @Override
-    public void setSemanticWebActive(boolean semanticWeb) {
-        this.fSemanticWebActive = semanticWeb;
-    }
+	@Override
+	public void setSemanticWebActive(boolean semanticWeb) {
+		this.fSemanticWebActive = semanticWeb;
+	}
 
-    public boolean showSyntax(String tagName) {
-        return true;
-    }
+	public boolean showSyntax(String tagName) {
+		return true;
+	}
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see info.bliki.wiki.model.WikiModel#appendInternalLink(java.lang.String,
-     * java.lang.String, java.lang.String, java.lang.String, boolean)
-     */
-    @Override
-    public void appendInternalLink(String topic, String hashSection, String topicDescription, String cssClass, boolean parseRecursive) {
-        String encodedtopic = encodeTitleToUrl(topic, true);
-        appendInternalLink(topic, hashSection, topicDescription, cssClass, parseRecursive, db.get(encodedtopic) != null);
-    }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see info.bliki.wiki.model.WikiModel#appendInternalLink(java.lang.String, java.lang.String, java.lang.String,
+	 * java.lang.String, boolean)
+	 */
+	@Override
+	public void appendInternalLink(String topic, String hashSection, String topicDescription, String cssClass,
+			boolean parseRecursive) {
+		String encodedtopic = encodeTitleToUrl(topic, true);
+		appendInternalLink(topic, hashSection, topicDescription, cssClass, parseRecursive,
+				db.get(encodedtopic) != null);
+	}
 
-    @Override
-    public void appendExternalLink(String uriSchemeName, String link, String linkName, boolean withoutSquareBrackets) {
-        if (uriSchemeName.equalsIgnoreCase("tel")) {
-            // example for a telephone link
-            link = Utils.escapeXml(link, true, false, false);
-            TagNode aTagNode = new TagNode("a");
-            aTagNode.addAttribute("href", link, true);
-            aTagNode.addAttribute("class", "telephonelink", true);
-            aTagNode.addAttribute("title", link, true);
-            if (withoutSquareBrackets) {
-                append(aTagNode);
-                aTagNode.addChild(new ContentToken(linkName));
-            } else {
-                String trimmedText = linkName.trim();
-                if (trimmedText.length() > 0) {
-                    pushNode(aTagNode);
-                    WikipediaParser.parseRecursive(trimmedText, this, false, true);
-                    popNode();
-                }
-            }
-            return;
-        }
-        super.appendExternalLink(uriSchemeName, link, linkName, withoutSquareBrackets);
-    }
+	@Override
+	public void appendExternalLink(String uriSchemeName, String link, String linkName, boolean withoutSquareBrackets) {
+		if (uriSchemeName.equalsIgnoreCase("tel")) {
+			// example for a telephone link
+			link = Utils.escapeXml(link, true, false, false);
+			TagNode aTagNode = new TagNode("a");
+			aTagNode.addAttribute("href", link, true);
+			aTagNode.addAttribute("class", "telephonelink", true);
+			aTagNode.addAttribute("title", link, true);
+			if (withoutSquareBrackets) {
+				append(aTagNode);
+				aTagNode.addChild(new ContentToken(linkName));
+			} else {
+				String trimmedText = linkName.trim();
+				if (trimmedText.length() > 0) {
+					pushNode(aTagNode);
+					WikipediaParser.parseRecursive(trimmedText, this, false, true);
+					popNode();
+				}
+			}
+			return;
+		}
+		super.appendExternalLink(uriSchemeName, link, linkName, withoutSquareBrackets);
+	}
 
-    /**
-     * Test for <a
-     * href="https://groups.google.de/group/bliki/t/a0540e27f27f02a5">Discussion:
-     * Hide Table of Contents (toc)?</a>
-     */
-    // public ITableOfContent createTableOfContent(boolean isTOCIdentifier) {
-    // if (fToCSet == null) {
-    // fToCSet = new HashSet<String>();
-    // fTableOfContent = new ArrayList<Object>();
-    // }
-    // fTableOfContentTag = new TableOfContentTag("div") {
-    // public void setShowToC(boolean showToC) {
-    // // do nothing
-    // }
-    // };
-    // return fTableOfContentTag;
-    // }
+	/**
+	 * Test for <a href="https://groups.google.de/group/bliki/t/a0540e27f27f02a5">Discussion: Hide Table of Contents
+	 * (toc)?</a>
+	 */
+	// public ITableOfContent createTableOfContent(boolean isTOCIdentifier) {
+	// if (fToCSet == null) {
+	// fToCSet = new HashSet<String>();
+	// fTableOfContent = new ArrayList<Object>();
+	// }
+	// fTableOfContentTag = new TableOfContentTag("div") {
+	// public void setShowToC(boolean showToC) {
+	// // do nothing
+	// }
+	// };
+	// return fTableOfContentTag;
+	// }
 }

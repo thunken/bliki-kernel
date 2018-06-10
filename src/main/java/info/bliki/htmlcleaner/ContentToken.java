@@ -48,30 +48,30 @@ import java.io.IOException;
  */
 public class ContentToken implements BaseToken, PlainTextConvertable {
 
-    private final String content;
+	private final String content;
 
-    public ContentToken(String content) {
-        this.content = content;
-    }
+	public ContentToken(String content) {
+		this.content = content;
+	}
 
-    public String getContent() {
-        return content;
-    }
+	public String getContent() {
+		return content;
+	}
 
-    @Override
-    public String toString() {
-        return content.trim();
-    }
+	@Override
+	public String toString() {
+		return content.trim();
+	}
 
-    @Override
-    public void serialize(XmlSerializer xmlSerializer) throws IOException {
-        xmlSerializer.getWriter().write(getContent());
-    }
+	@Override
+	public void serialize(XmlSerializer xmlSerializer) throws IOException {
+		xmlSerializer.getWriter().write(getContent());
+	}
 
-    @Override
-    public void renderPlainText(ITextConverter converter, Appendable buf, IWikiModel wikiModel) throws IOException {
-        if (content.length() > 0) {
-            Utils.escapeXmlToBuffer(content, buf, false, true, true, true);
-        }
-    }
+	@Override
+	public void renderPlainText(ITextConverter converter, Appendable buf, IWikiModel wikiModel) throws IOException {
+		if (content.length() > 0) {
+			Utils.escapeXmlToBuffer(content, buf, false, true, true, true);
+		}
+	}
 }

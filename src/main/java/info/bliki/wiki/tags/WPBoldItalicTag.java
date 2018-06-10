@@ -10,41 +10,40 @@ import java.io.IOException;
  *
  */
 public class WPBoldItalicTag extends WPTag {
-    String outerTag;
+	String outerTag;
 
-    String innerTag;
+	String innerTag;
 
-    public WPBoldItalicTag() {
-        super("bi");
-        outerTag = "b";
-        innerTag = "i";
-    }
+	public WPBoldItalicTag() {
+		super("bi");
+		outerTag = "b";
+		innerTag = "i";
+	}
 
-    @Override
-    public boolean isReduceTokenStack() {
-        return false;
-    }
+	@Override
+	public boolean isReduceTokenStack() {
+		return false;
+	}
 
-    @Override
-    public void renderHTML(ITextConverter converter, Appendable buf, IWikiModel model) throws IOException {
-        if (outerTag != null) {
-            buf.append("<").append(outerTag).append(">");
-        }
-        setName(innerTag);
-        super.renderHTML(converter, buf, model);
-        setName("bi");
-        if (outerTag != null) {
-            buf.append("</").append(outerTag).append(">");
-        }
-    }
+	@Override
+	public void renderHTML(ITextConverter converter, Appendable buf, IWikiModel model) throws IOException {
+		if (outerTag != null) {
+			buf.append("<").append(outerTag).append(">");
+		}
+		setName(innerTag);
+		super.renderHTML(converter, buf, model);
+		setName("bi");
+		if (outerTag != null) {
+			buf.append("</").append(outerTag).append(">");
+		}
+	}
 
-
-    @Override
-    public Object clone() {
-        WPBoldItalicTag tag = (WPBoldItalicTag) super.clone();
-        tag.outerTag = outerTag;
-        tag.innerTag = innerTag;
-        return tag;
-    }
+	@Override
+	public Object clone() {
+		WPBoldItalicTag tag = (WPBoldItalicTag) super.clone();
+		tag.outerTag = outerTag;
+		tag.innerTag = innerTag;
+		return tag;
+	}
 
 }

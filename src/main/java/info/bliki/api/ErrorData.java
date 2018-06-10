@@ -5,31 +5,27 @@ package info.bliki.api;
  */
 public class ErrorData {
 
-    private String code;
-    private String info;
+	private String code;
+	private String info;
 
+	public String getCode() {
+		return code;
+	}
 
-    public String getCode() {
-        return code;
-    }
+	public void setCode(String code) {
+		this.code = code;
+	}
 
-    public void setCode(String code) {
-        this.code = code;
-    }
+	public String getInfo() {
+		return info;
+	}
 
-    public String getInfo() {
-        return info;
-    }
+	public void setInfo(String info) {
+		this.info = info;
+	}
 
-    public void setInfo(String info) {
-        this.info = info;
-    }
-
-    @Override
-    public String toString() {
-        return "ErrorData{" +
-                "code='" + code + '\'' +
-                ", info='" + info + '\'' +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "ErrorData{" + "code='" + code + '\'' + ", info='" + info + '\'' + '}';
+	}
 }

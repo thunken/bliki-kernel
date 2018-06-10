@@ -40,31 +40,33 @@ package info.bliki.htmlcleaner;
 import java.io.IOException;
 
 /**
- * <p>HTML comment token.</p>
+ * <p>
+ * HTML comment token.
+ * </p>
  *
  * Created by: Vladimir Nikic<br/>
  * Date: November, 2006.
  */
 public class CommentToken implements BaseToken {
 
-    private String content;
+	private String content;
 
-    public CommentToken(String content) {
-        this.content = "<!--" + content + "-->";
-    }
+	public CommentToken(String content) {
+		this.content = "<!--" + content + "-->";
+	}
 
-    public String getContent() {
-        return content;
-    }
+	public String getContent() {
+		return content;
+	}
 
-    @Override
-        public String toString() {
-        return content;
-    }
+	@Override
+	public String toString() {
+		return content;
+	}
 
-    @Override
-    public void serialize(XmlSerializer xmlSerializer) throws IOException {
-        xmlSerializer.getWriter().write( getContent() );
-    }
+	@Override
+	public void serialize(XmlSerializer xmlSerializer) throws IOException {
+		xmlSerializer.getWriter().write(getContent());
+	}
 
 }

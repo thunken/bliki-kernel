@@ -42,151 +42,154 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
- * <p>Command line usage class.</p>
+ * <p>
+ * Command line usage class.
+ * </p>
  *
  * Created by: Vladimir Nikic <br/>
  * Date: November, 2006.
  */
 public class CommandLine {
 
-    private static String getArgValue(String[] args, String name) {
-        for (int i = 0; i < args.length; i++) {
-            String curr = args[i];
-            int eqIndex = curr.indexOf('=');
-            if (eqIndex >= 0) {
-                String argName = curr.substring(0, eqIndex).trim();
-                String argValue = curr.substring(eqIndex+1).trim();
+	private static String getArgValue(String[] args, String name) {
+		for (int i = 0; i < args.length; i++) {
+			String curr = args[i];
+			int eqIndex = curr.indexOf('=');
+			if (eqIndex >= 0) {
+				String argName = curr.substring(0, eqIndex).trim();
+				String argValue = curr.substring(eqIndex + 1).trim();
 
-                if (argName.toLowerCase().startsWith(name.toLowerCase())) {
-                    return argValue;
-                }
-            }
-        }
+				if (argName.toLowerCase().startsWith(name.toLowerCase())) {
+					return argValue;
+				}
+			}
+		}
 
-        return "";
-    }
+		return "";
+	}
 
-    private static boolean toBoolean(String s) {
-        return s != null && ( "on".equalsIgnoreCase(s) || "true".equalsIgnoreCase(s) || "yes".equalsIgnoreCase(s) );
-    }
+	private static boolean toBoolean(String s) {
+		return s != null && ("on".equalsIgnoreCase(s) || "true".equalsIgnoreCase(s) || "yes".equalsIgnoreCase(s));
+	}
 
-    public static void main(String[] args) throws IOException {
-        String source = getArgValue(args, "src");
-        if ( "".equals(source) ) {
-            System.err.println("Usage: java -jar htmlcleanerXX.jar src = <url | file> [incharset = <charset>] [dest = <file>] [outcharset = <charset>] [options...]");
-            System.err.println("");
-            System.err.println("where options include:");
-            System.err.println("    outputtype = simple | compact | pretty");
-            System.err.println("    advancedxmlescape = true | false");
-            System.err.println("    usecdata = true | false");
-            System.err.println("    specialentities = true | false");
-            System.err.println("    unicodechars = true | false");
-            System.err.println("    omitunknowntags = true | false");
-            System.err.println("    omitdeprtags = true | false");
-            System.err.println("    omitcomments = true | false");
-            System.err.println("    omitxmldecl = true | false");
-            System.err.println("    omitdoctypedecl = true | false");
-            System.err.println("    omitxmlnsatt = true | false");
-            System.err.println("    hyphenreplacement = <string value>");
-            System.exit(1);
-        }
+	public static void main(String[] args) throws IOException {
+		String source = getArgValue(args, "src");
+		if ("".equals(source)) {
+			System.err.println(
+					"Usage: java -jar htmlcleanerXX.jar src = <url | file> [incharset = <charset>] [dest = <file>] [outcharset = <charset>] [options...]");
+			System.err.println("");
+			System.err.println("where options include:");
+			System.err.println("    outputtype = simple | compact | pretty");
+			System.err.println("    advancedxmlescape = true | false");
+			System.err.println("    usecdata = true | false");
+			System.err.println("    specialentities = true | false");
+			System.err.println("    unicodechars = true | false");
+			System.err.println("    omitunknowntags = true | false");
+			System.err.println("    omitdeprtags = true | false");
+			System.err.println("    omitcomments = true | false");
+			System.err.println("    omitxmldecl = true | false");
+			System.err.println("    omitdoctypedecl = true | false");
+			System.err.println("    omitxmlnsatt = true | false");
+			System.err.println("    hyphenreplacement = <string value>");
+			System.exit(1);
+		}
 
-        String inCharset = getArgValue(args, "incharset");
-        if ("".equals(inCharset)) {
-            inCharset = HtmlCleaner.DEFAULT_CHARSET;
-        }
+		String inCharset = getArgValue(args, "incharset");
+		if ("".equals(inCharset)) {
+			inCharset = HtmlCleaner.DEFAULT_CHARSET;
+		}
 
-        String outCharset = getArgValue(args, "outcharset");
-        if ("".equals(outCharset)) {
-            outCharset = HtmlCleaner.DEFAULT_CHARSET;
-        }
+		String outCharset = getArgValue(args, "outcharset");
+		if ("".equals(outCharset)) {
+			outCharset = HtmlCleaner.DEFAULT_CHARSET;
+		}
 
-        String destination = getArgValue(args, "dest");
-        String outputType = getArgValue(args, "outputtype");
-        String advancedXmlEscape = getArgValue(args, "advancedxmlescape");
-        String useCData = getArgValue(args, "usecdata");
-        String translateSpecialEntities = getArgValue(args, "specialentities");
-        String unicodeChars = getArgValue(args, "unicodechars");
-        String omitUnknownTags = getArgValue(args, "omitunknowntags");
-        String omitDeprecatedTags = getArgValue(args, "omitdeprtags");
-        String omitComments = getArgValue(args, "omitcomments");
-        String omitXmlDeclaration = getArgValue(args, "omitxmldecl");
-        String omitDoctypeDeclaration = getArgValue(args, "omitdoctypedecl");
-        String omitXmlnsAttributes = getArgValue(args, "omitxmlnsatt");
-        String commentHyphen = getArgValue(args, "hyphenreplacement");
+		String destination = getArgValue(args, "dest");
+		String outputType = getArgValue(args, "outputtype");
+		String advancedXmlEscape = getArgValue(args, "advancedxmlescape");
+		String useCData = getArgValue(args, "usecdata");
+		String translateSpecialEntities = getArgValue(args, "specialentities");
+		String unicodeChars = getArgValue(args, "unicodechars");
+		String omitUnknownTags = getArgValue(args, "omitunknowntags");
+		String omitDeprecatedTags = getArgValue(args, "omitdeprtags");
+		String omitComments = getArgValue(args, "omitcomments");
+		String omitXmlDeclaration = getArgValue(args, "omitxmldecl");
+		String omitDoctypeDeclaration = getArgValue(args, "omitdoctypedecl");
+		String omitXmlnsAttributes = getArgValue(args, "omitxmlnsatt");
+		String commentHyphen = getArgValue(args, "hyphenreplacement");
 
-        HtmlCleaner cleaner = null;
+		HtmlCleaner cleaner = null;
 
-        String src = source.toLowerCase();
-        if ( src.startsWith("http://") || src.startsWith("https://") ) {
-            cleaner = new HtmlCleaner(new URL(src), inCharset);
-        } else {
-            cleaner = new HtmlCleaner(new File(src), inCharset);
-        }
+		String src = source.toLowerCase();
+		if (src.startsWith("http://") || src.startsWith("https://")) {
+			cleaner = new HtmlCleaner(new URL(src), inCharset);
+		} else {
+			cleaner = new HtmlCleaner(new File(src), inCharset);
+		}
 
-        if ( !"".equals(omitUnknownTags) ) {
-            cleaner.setOmitUnknownTags( toBoolean(omitUnknownTags) );
-        }
+		if (!"".equals(omitUnknownTags)) {
+			cleaner.setOmitUnknownTags(toBoolean(omitUnknownTags));
+		}
 
-        if ( !"".equals(omitDeprecatedTags) ) {
-            cleaner.setOmitDeprecatedTags( toBoolean(omitDeprecatedTags) );
-        }
+		if (!"".equals(omitDeprecatedTags)) {
+			cleaner.setOmitDeprecatedTags(toBoolean(omitDeprecatedTags));
+		}
 
-        if ( !"".equals(advancedXmlEscape) ) {
-            cleaner.setAdvancedXmlEscape( toBoolean(advancedXmlEscape) );
-        }
+		if (!"".equals(advancedXmlEscape)) {
+			cleaner.setAdvancedXmlEscape(toBoolean(advancedXmlEscape));
+		}
 
-        if ( !"".equals(useCData) ) {
-            cleaner.setUseCdataForScriptAndStyle( toBoolean(useCData) );
-        }
+		if (!"".equals(useCData)) {
+			cleaner.setUseCdataForScriptAndStyle(toBoolean(useCData));
+		}
 
-        if ( !"".equals(translateSpecialEntities) ) {
-            cleaner.setTranslateSpecialEntities( toBoolean(translateSpecialEntities) );
-        }
+		if (!"".equals(translateSpecialEntities)) {
+			cleaner.setTranslateSpecialEntities(toBoolean(translateSpecialEntities));
+		}
 
-        if ( !"".equals(unicodeChars) ) {
-            cleaner.setRecognizeUnicodeChars( toBoolean(unicodeChars) );
-        }
+		if (!"".equals(unicodeChars)) {
+			cleaner.setRecognizeUnicodeChars(toBoolean(unicodeChars));
+		}
 
-        if ( !"".equals(omitComments) ) {
-            cleaner.setOmitComments( toBoolean(omitComments) );
-        }
+		if (!"".equals(omitComments)) {
+			cleaner.setOmitComments(toBoolean(omitComments));
+		}
 
-        if ( !"".equals(omitXmlDeclaration) ) {
-            cleaner.setOmitXmlDeclaration( toBoolean(omitXmlDeclaration) );
-        }
+		if (!"".equals(omitXmlDeclaration)) {
+			cleaner.setOmitXmlDeclaration(toBoolean(omitXmlDeclaration));
+		}
 
-        if ( !"".equals(omitDoctypeDeclaration) ) {
-            cleaner.setOmitDoctypeDeclaration( toBoolean(omitDoctypeDeclaration) );
-        }
+		if (!"".equals(omitDoctypeDeclaration)) {
+			cleaner.setOmitDoctypeDeclaration(toBoolean(omitDoctypeDeclaration));
+		}
 
-        if ( !"".equals(omitXmlnsAttributes) ) {
-            cleaner.setOmitXmlnsAttributes( toBoolean(omitXmlnsAttributes) );
-        }
+		if (!"".equals(omitXmlnsAttributes)) {
+			cleaner.setOmitXmlnsAttributes(toBoolean(omitXmlnsAttributes));
+		}
 
-        if ( !"".equals(commentHyphen) ) {
-            cleaner.setHyphenReplacementInComment(commentHyphen);
-        }
+		if (!"".equals(commentHyphen)) {
+			cleaner.setHyphenReplacementInComment(commentHyphen);
+		}
 
-        cleaner.clean();
+		cleaner.clean();
 
-        if ( "".equals(destination) ) {
-            if ( "compact".equals(outputType) ) {
-                cleaner.writeCompactXmlToStream(System.out, outCharset);
-            } else if ( "pretty".equals(outputType) ) {
-                cleaner.writePrettyXmlToStream(System.out, outCharset);
-            } else {
-                cleaner.writeXmlToStream(System.out, outCharset);
-            }
-        } else {
-            if ( "compact".equals(outputType) ) {
-                cleaner.writeCompactXmlToFile(destination, outCharset);
-            } else if ( "pretty".equals(outputType) ) {
-                cleaner.writePrettyXmlToFile(destination, outCharset);
-            } else {
-                cleaner.writeXmlToFile(destination, outCharset);
-            }
-        }
-    }
+		if ("".equals(destination)) {
+			if ("compact".equals(outputType)) {
+				cleaner.writeCompactXmlToStream(System.out, outCharset);
+			} else if ("pretty".equals(outputType)) {
+				cleaner.writePrettyXmlToStream(System.out, outCharset);
+			} else {
+				cleaner.writeXmlToStream(System.out, outCharset);
+			}
+		} else {
+			if ("compact".equals(outputType)) {
+				cleaner.writeCompactXmlToFile(destination, outCharset);
+			} else if ("pretty".equals(outputType)) {
+				cleaner.writePrettyXmlToFile(destination, outCharset);
+			} else {
+				cleaner.writeXmlToFile(destination, outCharset);
+			}
+		}
+	}
 
 }
