@@ -1,15 +1,15 @@
 package info.bliki.wiki.filter;
 
-import info.bliki.wiki.model.Configuration;
-import info.bliki.wiki.model.WikiModel;
-import info.bliki.wiki.tags.HTMLBlockTag;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+
+import info.bliki.wiki.model.Configuration;
+import info.bliki.wiki.model.WikiModel;
+import info.bliki.wiki.tags.HTMLBlockTag;
 
 public class TemplateParserTest extends FilterTestSupport {
 	private static final String TEST_STRING_01 = "[[Category:Interwiki templates|wikipedia]]\n"
@@ -721,20 +721,20 @@ public class TemplateParserTest extends FilterTestSupport {
 		assertThat(wikiModel.parseTemplates("{{formatnum:987654321.654321}}", false)).isEqualTo("987,654,321.654");
 		assertThat(wikiModel.parseTemplates("{{FORMATNUM:987654321.654321}}", false)).isEqualTo("987,654,321.654");
 
-		WikiTestModel wikiModel2 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel2 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel2.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel2.setUp();
-		WikiModel germanWikiModel = wikiModel2;
+		final WikiModel germanWikiModel = wikiModel2;
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:1401}}", false)).isEqualTo("1.401");
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:987654321.654321}}", false))
 				.isEqualTo("987.654.321,654");
 
-		WikiTestModel wikiModel1 = new WikiTestModel(Locale.ITALIAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel1 = new WikiTestModel(Locale.ITALIAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel1.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel1.setUp();
-		WikiModel italianWikiModel = wikiModel1;
+		final WikiModel italianWikiModel = wikiModel1;
 		assertThat(italianWikiModel.parseTemplates("{{formatnum:1401}}", false)).isEqualTo("1.401");
 		assertThat(italianWikiModel.parseTemplates("{{formatnum:987654321}}", false)).isEqualTo("987.654.321");
 	}
@@ -745,11 +745,11 @@ public class TemplateParserTest extends FilterTestSupport {
 		assertThat(wikiModel.parseTemplates("{{formatnum:987,654,321.654321|R}}", false))
 				.isEqualTo("9.87654321654321E8");
 
-		WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel1.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel1.setUp();
-		WikiModel germanWikiModel = wikiModel1;
+		final WikiModel germanWikiModel = wikiModel1;
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:987.654.321,654321|R}}", false))
 				.isEqualTo("9.87654321654321E8");
 	}
@@ -758,11 +758,11 @@ public class TemplateParserTest extends FilterTestSupport {
 	public void testFormatnum003() {
 		// default locale is ENGLISH
 		assertThat(wikiModel.parseTemplates("{{formatnum:90}}")).isEqualTo("90");
-		WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel1.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel1.setUp();
-		WikiModel germanWikiModel = wikiModel1;
+		final WikiModel germanWikiModel = wikiModel1;
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:90}}")).isEqualTo("90");
 	}
 
@@ -770,11 +770,11 @@ public class TemplateParserTest extends FilterTestSupport {
 	public void testFormatnum004() {
 		// default locale is ENGLISH
 		assertThat(wikiModel.parseTemplates("{{formatnum:90.}}")).isEqualTo("90.");
-		WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel1.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel1.setUp();
-		WikiModel germanWikiModel = wikiModel1;
+		final WikiModel germanWikiModel = wikiModel1;
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:90.}}")).isEqualTo("90,");
 	}
 
@@ -782,11 +782,11 @@ public class TemplateParserTest extends FilterTestSupport {
 	public void testFormatnum005() {
 		// default locale is ENGLISH
 		assertThat(wikiModel.parseTemplates("{{formatnum:90.0}}")).isEqualTo("90.0");
-		WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel1.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel1.setUp();
-		WikiModel germanWikiModel = wikiModel1;
+		final WikiModel germanWikiModel = wikiModel1;
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:90.0}}")).isEqualTo("90,0");
 	}
 
@@ -796,11 +796,11 @@ public class TemplateParserTest extends FilterTestSupport {
 		assertThat(wikiModel.parseTemplates("{{formatnum:90.000}}")).isEqualTo("90.000");
 		assertThat(wikiModel.parseTemplates("{{formatnum:90.000000000000000000000000000000000000}}"))
 				.isEqualTo("90.000000000000000000000000000000000000");
-		WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
+		final WikiTestModel wikiModel1 = new WikiTestModel(Locale.GERMAN, "http://www.bliki.info/wiki/${image}",
 				"http://www.bliki.info/wiki/${title}", "wikitestModel");
 		wikiModel1.addTokenTag("iframe", new HTMLBlockTag("iframe", Configuration.SPECIAL_BLOCK_TAGS));
 		wikiModel1.setUp();
-		WikiModel germanWikiModel = wikiModel1;
+		final WikiModel germanWikiModel = wikiModel1;
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:90.000}}")).isEqualTo("90,000");
 		assertThat(germanWikiModel.parseTemplates("{{formatnum:90.000000000000000000000000000000000000}}"))
 				.isEqualTo("90,000000000000000000000000000000000000");
@@ -1334,8 +1334,8 @@ public class TemplateParserTest extends FilterTestSupport {
 	@Test
 	public void testTime001() {
 		// seconds since January 1970
-		String currentSecondsStr = wikiModel.parseTemplates("{{ #time: U }}", false);
-		Long currentSeconds = Long.valueOf(currentSecondsStr);
+		final String currentSecondsStr = wikiModel.parseTemplates("{{ #time: U }}", false);
+		final Long currentSeconds = Long.valueOf(currentSecondsStr);
 
 		assertThat(currentSeconds).isGreaterThan(1212598361);
 	}
@@ -1996,7 +1996,7 @@ public class TemplateParserTest extends FilterTestSupport {
 	@Test
 	public void testCategory001() throws Exception {
 		assertThat(wikiModel.render("[[Category:Main Page]]", false)).isEqualTo("");
-		HashMap<String, String> expectedCategories = new HashMap<>();
+		final HashMap<String, String> expectedCategories = new HashMap<>();
 		expectedCategories.put("Main Page", "Category:Main Page");
 		assertThat(wikiModel.getCategories()).isEqualTo(expectedCategories);
 	}
@@ -2018,25 +2018,25 @@ public class TemplateParserTest extends FilterTestSupport {
 
 	@Test
 	public void testReplaceTemplateParameters() throws Exception {
-		TemplateParser templateParser = new TemplateParser("1:{{{1|}}}2", false, true);
+		final TemplateParser templateParser = new TemplateParser("1:{{{1|}}}2", false, true);
 		templateParser.setModel(wikiModel);
-		String result = templateParser.replaceTemplateParameters(null, 0).toString();
+		final String result = templateParser.replaceTemplateParameters(null, 0).toString();
 		assertThat(result).isEqualTo("1:2");
 	}
 
 	@Test
 	public void testReplaceTemplateParametersDefault() throws Exception {
-		TemplateParser templateParser = new TemplateParser("1:{{{1|Default}}}2", false, true);
+		final TemplateParser templateParser = new TemplateParser("1:{{{1|Default}}}2", false, true);
 		templateParser.setModel(wikiModel);
-		String result = templateParser.replaceTemplateParameters(null, 0).toString();
+		final String result = templateParser.replaceTemplateParameters(null, 0).toString();
 		assertThat(result).isEqualTo("1:Default2");
 	}
 
 	@Test
 	public void testReplaceTemplateParametersNotSetReturnsNull() throws Exception {
-		TemplateParser templateParser = new TemplateParser("1:{{{1}}}2", false, true);
+		final TemplateParser templateParser = new TemplateParser("1:{{{1}}}2", false, true);
 		templateParser.setModel(wikiModel);
-		StringBuilder result = templateParser.replaceTemplateParameters(null, 0);
+		final Object result = templateParser.replaceTemplateParameters(null, 0);
 		assertThat(result).isNull();
 	}
 }

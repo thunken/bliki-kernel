@@ -1,15 +1,16 @@
 package info.bliki.wiki.filter;
 
-import info.bliki.wiki.model.Configuration;
-import info.bliki.wiki.model.WikiModel;
-import org.junit.Test;
+import static info.bliki.wiki.model.Configuration.DEFAULT_WIKI_ID;
+import static info.bliki.wiki.model.IConfiguration.Casing.CaseSensitive;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 import java.util.Set;
 
-import static info.bliki.wiki.model.Configuration.DEFAULT_WIKI_ID;
-import static info.bliki.wiki.model.IConfiguration.Casing.CaseSensitive;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+
+import info.bliki.wiki.model.Configuration;
+import info.bliki.wiki.model.WikiModel;
 
 public class WPLinkFilterTest extends FilterTestSupport {
 
@@ -31,7 +32,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 		assertThat(wikiModel.render(
 				"You could open the [[Wikipedia:sandbox|sandbox]] in a separate window or tab to be able to see both this text and your tests in the sandbox.",
 				false)).isEqualTo("\n"
-						+ "<p>You could open the <a href=\"//en.wikipedia.org/wiki/sandbox\">sandbox</a> in a separate window or tab to be able to see both this text and your tests in the sandbox.</p>");
+						+ "<p>You could open the <a href=\"https://en.wikipedia.org/wiki/sandbox\">sandbox</a> in a separate window or tab to be able to see both this text and your tests in the sandbox.</p>");
 	}
 
 	@Test
@@ -42,7 +43,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testLink1() throws Exception {
 		assertThat(wikiModel.render("[[en:Test|Test]]", false))
-				.isEqualTo("\n" + "<p><a href=\"//en.wikipedia.org/wiki/Test\">Test</a></p>");
+				.isEqualTo("\n" + "<p><a href=\"https://en.wikipedia.org/wiki/Test\">Test</a></p>");
 	}
 
 	@Test
@@ -69,7 +70,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testCategory01() throws Exception {
 		assertThat(wikiModel.render("[[Category:Tips and Tricks]]", false)).isEqualTo("");
-		Map<String, String> map = wikiModel.getCategories();
+		final Map<String, String> map = wikiModel.getCategories();
 		assertThat(map).containsKey("Tips and Tricks");
 	}
 
@@ -77,7 +78,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	public void testCategory02() throws Exception {
 		assertThat(wikiModel.render("[[Category:Rock and Roll Hall of Fame inductees|Beatles, The]]", false))
 				.isEqualTo("");
-		Map<String, String> map = wikiModel.getCategories();
+		final Map<String, String> map = wikiModel.getCategories();
 		// assertTrue(map.containsKey("Rock and Roll Hall of Fame inductees"));
 		assertThat(map).containsValue("Beatles, The");
 	}
@@ -85,7 +86,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testCategoryWithSuffix() throws Exception {
 		assertThat(wikiModel.render("[[Category:Test]]xx yy", false)).isEqualTo("\n<p>xx yy</p>");
-		Map<String, String> map = wikiModel.getCategories();
+		final Map<String, String> map = wikiModel.getCategories();
 		assertThat(map).containsKey("Test");
 	}
 
@@ -104,7 +105,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testLink5() throws Exception {
 		assertThat(wikiModel.render("[[wikivoyage:test]]", false))
-				.isEqualTo("\n" + "<p><a href=\"//en.wikivoyage.org/wiki/test\">wikivoyage:test</a></p>");
+				.isEqualTo("\n" + "<p><a href=\"https://en.wikivoyage.org/wiki/test\">wikivoyage:test</a></p>");
 	}
 
 	@Test
@@ -157,7 +158,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	public void testLink12() throws Exception {
 		assertThat(wikiModel.render("kellereien wie [[Henkell & Söhnlein|Henkell]], [[Söhnlein]]", false)).isEqualTo(
 				"\n" + "<p>kellereien wie <a href=\"http://www.bliki.info/wiki/Henkell_%26_S%C3%B6hnlein\" title=\"Henkell &amp; Söhnlein\">Henkell</a>, <a href=\"http://www.bliki.info/wiki/S%C3%B6hnlein\" title=\"Söhnlein\">Söhnlein</a></p>");
-		Set<String> set = wikiModel.getLinks();
+		final Set<String> set = wikiModel.getLinks();
 		assertThat(set).contains("Söhnlein");
 		assertThat(set).contains("Henkell & Söhnlein");
 	}
@@ -166,7 +167,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	public void testLink13() throws Exception {
 		assertThat(wikiModel.render("test [[lets start a [[nested]] link]] test", false)).isEqualTo("\n"
 				+ "<p>test [[lets start a <a href=\"http://www.bliki.info/wiki/Nested\" title=\"Nested\">nested</a> link]] test</p>");
-		Set<String> set = wikiModel.getLinks();
+		final Set<String> set = wikiModel.getLinks();
 		assertThat(set).contains("nested");
 	}
 
@@ -205,7 +206,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testInterwiki1() throws Exception {
 		assertThat(wikiModel.render("[[de:Johann Wolfgang von Goethe|Goethe]]s Faust", false)).isEqualTo(
-				"\n" + "<p><a href=\"//de.wikipedia.org/wiki/Johann_Wolfgang_von_Goethe\">Goethes</a> Faust</p>");
+				"\n" + "<p><a href=\"https://de.wikipedia.org/wiki/Johann_Wolfgang_von_Goethe\">Goethes</a> Faust</p>");
 	}
 
 	@Test
@@ -217,7 +218,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testInterwiki3() throws Exception {
 		assertThat(wikiModel.render("[[:fr:]]", false))
-				.isEqualTo("\n" + "<p><a href=\"//fr.wikipedia.org/wiki/\">fr:</a></p>");
+				.isEqualTo("\n" + "<p><a href=\"https://fr.wikipedia.org/wiki/\">fr:</a></p>");
 	}
 
 	@Test
@@ -297,7 +298,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 
 	@Test
 	public void testPlainTextConverter002() throws Exception {
-		String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl|}}"
+		final String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl|}}"
 				+ "<!--Note: French does not have tonic accents, so do not add stress marks to this pronunciation-->)"
 				+ " is a 19th century ";
 
@@ -307,7 +308,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 
 	@Test
 	public void testPlainTextConverter003() throws Exception {
-		String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl}}"
+		final String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl}}"
 				+ "<!--Note: French does not have tonic accents, so do not add stress marks to this pronunciation-->)"
 				+ " is a 19th century ";
 
@@ -317,7 +318,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 
 	@Test
 	public void testPlainTextConverter004() throws Exception {
-		String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl|lang}}"
+		final String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl|lang}}"
 				+ "<!--Note: French does not have tonic accents, so do not add stress marks to this pronunciation-->)"
 				+ " is a 19th century ";
 
@@ -327,7 +328,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 
 	@Test
 	public void testPlainTextConverter005() throws Exception {
-		String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl| }}"
+		final String wikitext = "The '''Eiffel Tower''',{{IPA-fr|tuʀ ɛfɛl| }}"
 				+ "<!--Note: French does not have tonic accents, so do not add stress marks to this pronunciation-->)"
 				+ " is a 19th century ";
 
@@ -345,7 +346,7 @@ public class WPLinkFilterTest extends FilterTestSupport {
 	@Test
 	public void testLinkWithEscapedColon() throws Exception {
 		assertThat(wikiModel.render("[[en&#x3a;Test|Test]]", false))
-				.isEqualTo("\n" + "<p><a href=\"//en.wikipedia.org/wiki/Test\">Test</a></p>");
+				.isEqualTo("\n" + "<p><a href=\"https://en.wikipedia.org/wiki/Test\">Test</a></p>");
 	}
 
 }

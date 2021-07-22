@@ -1,9 +1,9 @@
 package info.bliki.wiki.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class InterWikiMapTest {
 	private InterWikiMap subject;
@@ -22,7 +22,7 @@ public class InterWikiMapTest {
 	public void testGetInterWikiWithLangCode() throws Exception {
 		final InterWiki interWiki = subject.getInterWiki("fr");
 		assertThat(interWiki).isNotNull();
-		assertThat(interWiki.pattern).isEqualTo("//fr.wikipedia.org/wiki/$1");
+		assertThat(interWiki.pattern).isEqualTo("https://fr.wikipedia.org/wiki/$1");
 		assertThat(interWiki.local).isTrue();
 	}
 
@@ -30,7 +30,7 @@ public class InterWikiMapTest {
 	public void testGetInterWikiWithShortCode() throws Exception {
 		final InterWiki interWiki = subject.getInterWiki("s");
 		assertThat(interWiki).isNotNull();
-		assertThat(interWiki.pattern).isEqualTo("//en.wikisource.org/wiki/$1");
+		assertThat(interWiki.pattern).isEqualTo("https://en.wikisource.org/wiki/$1");
 		assertThat(interWiki.local).isTrue();
 	}
 
@@ -38,7 +38,7 @@ public class InterWikiMapTest {
 	public void testGetInterWikiIsCaseInsensitive() throws Exception {
 		final InterWiki interWiki = subject.getInterWiki("S");
 		assertThat(interWiki).isNotNull();
-		assertThat(interWiki.pattern).isEqualTo("//en.wikisource.org/wiki/$1");
+		assertThat(interWiki.pattern).isEqualTo("https://en.wikisource.org/wiki/$1");
 		assertThat(interWiki.local).isTrue();
 	}
 
@@ -54,6 +54,6 @@ public class InterWikiMapTest {
 	public void testInterWikiLinksAreRelativeToCurrentInstallation() throws Exception {
 		subject = new InterWikiMap(new Configuration().getInterWikiMapping(), "frwiktionary");
 		final InterWiki interWiki = subject.getInterWiki("s");
-		assertThat(interWiki.pattern).isEqualTo("//fr.wikisource.org/wiki/$1");
+		assertThat(interWiki.pattern).isEqualTo("https://fr.wikisource.org/wiki/$1");
 	}
 }
